@@ -1,11 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, createContext, useContext } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from '@/components/theme-provider'
 import { logout } from '@/lib/actions'
 import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet'
+import { useIsMobile } from '@/components/ui/use-mobile'
 import { cn } from '@/lib/utils'
 
 // Minimal inline icons to avoid adding a new icon library dependency
@@ -73,6 +81,31 @@ function IconLogOut() {
     </svg>
   )
 }
+function IconMenu() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+    </svg>
+  )
+}
+
+// Context for managing mobile drawer state
+type SidebarContextType = {
+  mobileOpen: boolean
+  setMobileOpen: (open: boolean) => void
+}
+
+const SidebarContext = createContext<SidebarContextType | null>(null)
+
+export function useSidebar() {
+  const context = useContext(SidebarContext)
+  if (!context) {
+    throw new Error('useSidebar must be used within an AppSidebarProvider')
+  }
+  return context
+}
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', Icon: IconDashboard },
@@ -84,30 +117,39 @@ interface AppSidebarProps {
   userEmail: string
 }
 
-export function AppSidebar({ userEmail }: AppSidebarProps) {
-  const [collapsed, setCollapsed] = useState(false)
+// Shared sidebar content component used in both desktop and mobile views
+function SidebarContent({
+  userEmail,
+  collapsed = false,
+  onNavClick,
+  onToggleCollapse,
+  showCollapseButton = true,
+}: {
+  userEmail: string
+  collapsed?: boolean
+  onNavClick?: () => void
+  onToggleCollapse?: () => void
+  showCollapseButton?: boolean
+}) {
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
 
   return (
-    <aside
-      className={cn(
-        'relative flex flex-col h-screen border-r border-border bg-sidebar text-sidebar-foreground transition-all duration-200',
-        collapsed ? 'w-14' : 'w-56',
-      )}
-    >
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className={cn('flex items-center border-b border-border px-3 py-4', collapsed ? 'justify-center' : 'justify-between')}>
         {!collapsed && (
           <span className="text-base font-bold tracking-tight truncate">UALA Tracker</span>
         )}
-        <button
-          onClick={() => setCollapsed((v) => !v)}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="rounded-md p-1.5 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors border border-transparent hover:border-border"
-        >
-          {collapsed ? <IconChevronRight /> : <IconChevronLeft />}
-        </button>
+        {showCollapseButton && onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="rounded-md p-1.5 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors border border-transparent hover:border-border"
+          >
+            {collapsed ? <IconChevronRight /> : <IconChevronLeft />}
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -118,6 +160,7 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
             <Link
               key={href}
               href={href}
+              onClick={onNavClick}
               className={cn(
                 'flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors border',
                 active
@@ -170,6 +213,109 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
           </button>
         </form>
       </div>
+    </div>
+  )
+}
+
+// Provider component that wraps the layout and manages mobile state
+export function AppSidebarProvider({
+  children,
+  userEmail,
+}: {
+  children: React.ReactNode
+  userEmail: string
+}) {
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const isMobile = useIsMobile()
+
+  return (
+    <SidebarContext.Provider value={{ mobileOpen, setMobileOpen }}>
+      <div className="flex h-screen w-full overflow-hidden bg-background">
+        {/* Desktop Sidebar - hidden on mobile */}
+        <DesktopSidebar userEmail={userEmail} />
+        
+        {/* Mobile Drawer */}
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent
+            side="left"
+            className="w-72 p-0 bg-sidebar text-sidebar-foreground [&>button]:hidden"
+          >
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation Menu</SheetTitle>
+              <SheetDescription>Main navigation for UALA Tracker</SheetDescription>
+            </SheetHeader>
+            <SidebarContent
+              userEmail={userEmail}
+              collapsed={false}
+              onNavClick={() => setMobileOpen(false)}
+              showCollapseButton={false}
+            />
+          </SheetContent>
+        </Sheet>
+
+        {/* Main content area */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Mobile header with hamburger */}
+          {isMobile && (
+            <header className="flex h-14 items-center gap-4 border-b border-border bg-background px-4 md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open navigation menu"
+                className="shrink-0"
+              >
+                <IconMenu />
+              </Button>
+              <span className="text-base font-bold tracking-tight">UALA Tracker</span>
+            </header>
+          )}
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
+      </div>
+    </SidebarContext.Provider>
+  )
+}
+
+// Desktop sidebar component - hidden on mobile
+function DesktopSidebar({ userEmail }: { userEmail: string }) {
+  const [collapsed, setCollapsed] = useState(false)
+
+  return (
+    <aside
+      className={cn(
+        'relative hidden md:flex flex-col h-screen border-r border-border bg-sidebar text-sidebar-foreground transition-all duration-200',
+        collapsed ? 'w-14' : 'w-56',
+      )}
+    >
+      <SidebarContent
+        userEmail={userEmail}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed((v) => !v)}
+        showCollapseButton={true}
+      />
     </aside>
+  )
+}
+
+// Legacy export for backwards compatibility - wraps existing component
+export function AppSidebar({ userEmail }: AppSidebarProps) {
+  return <DesktopSidebar userEmail={userEmail} />
+}
+
+// Mobile trigger button for use in other components
+export function MobileSidebarTrigger() {
+  const { setMobileOpen } = useSidebar()
+  
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setMobileOpen(true)}
+      aria-label="Open navigation menu"
+      className="md:hidden"
+    >
+      <IconMenu />
+    </Button>
   )
 }
