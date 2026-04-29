@@ -118,28 +118,28 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle className="text-lg">Top Merchants</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-hidden">
           {topMerchants.length === 0 ? (
             <p className="text-sm text-muted-foreground">No purchase transactions.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-hidden">
               {topMerchants.map((item, index) => (
-                <div key={item.merchant} className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium text-muted-foreground w-5 shrink-0">
+                <div key={item.merchant} className="flex items-start justify-between gap-2 min-w-0">
+                  <div className="flex items-start gap-2 min-w-0">
+                    <span className="text-sm font-medium text-muted-foreground w-5 shrink-0 flex-none">
                       {index + 1}.
                     </span>
-                    <span className="text-sm font-medium truncate">
+                    <span className="text-sm font-medium truncate min-w-0 break-words">
                       {item.merchant}
                     </span>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-medium tabular-nums">{formatCurrency(item.total)}</p>
-                    <p className="text-xs text-muted-foreground">
+                  <div className="text-right shrink-0 flex-none">
+                    <p className="font-medium tabular-nums whitespace-nowrap">{formatCurrency(item.total)}</p>
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
                       {item.count} {item.count === 1 ? 'txn' : 'txns'}
                     </p>
                   </div>
