@@ -13,6 +13,7 @@ import pypdf
 from pydantic import BaseModel
 
 UALA_IDENTIFIER = "Ualá Bank S.A.U."
+WILOBANK_IDENTIFIER = "Wilobank S.A.U."  # nombre anterior al cambio de marca
 
 MESES: dict[str, int] = {
     "ENE": 1, "ENERO": 1, "FEB": 2, "FEBRERO": 2, "MAR": 3, "MARZO": 3,
@@ -229,7 +230,7 @@ def is_uala_pdf(pdf_bytes: bytes) -> bool:
     try:
         reader = pypdf.PdfReader(BytesIO(pdf_bytes))
         first_page = reader.pages[0].extract_text() or ""
-        return UALA_IDENTIFIER in first_page
+        return UALA_IDENTIFIER in first_page or WILOBANK_IDENTIFIER in first_page
     except Exception:
         return False
 
@@ -247,7 +248,7 @@ def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractRespons
     due_date_m = re.search(r"Fecha de vencimiento\n(\d{2} [A-Z][a-z]+ \d{4})", p1)
     close_date_m = re.search(r"Fecha de cierre\n(\d{2} [A-Z][a-z]+ \d{4})", p1)
     min_payment_m = re.search(r"Pago mínimo\n\$ ([\d\.]+,\d{2})", p1)
-    prev_balance_m = re.search(r"Resumen anterior\n\$ ([\d\.]+,\d{2})", p1)
+    prev_balance_m = re.search(r"(?:Resumen anterior|Deuda anterior)\n\$ ([\d\.]+,\d{2})", p1)
     total_debt_m = re.search(r"Tu deuda en pesos:\n\$ ([\d\.]+,\d{2})", p1)
     credit_limit_m = re.search(r"(\$[\d\.]+,\d{2})\s+de compra en 1 cuota", p1)
     tna_m = re.search(r"Intereses Financiación Y Compensatorios en Pesos\n([\d\.]+)%", p1)
