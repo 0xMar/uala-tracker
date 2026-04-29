@@ -90,28 +90,30 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
                 type="monotone"
                 dataKey="totalDebt"
                 name="Total Debt"
-                stroke="hsl(var(--primary))"
+                stroke="var(--chart-1)"
                 strokeWidth={2}
                 dot={{ 
-                  fill: 'hsl(var(--primary))',
+                  fill: 'var(--chart-1)',
+                  stroke: 'var(--card)',
+                  strokeWidth: 2,
                   r: 4,
-                  strokeWidth: 0,
                 }}
-                activeDot={{ r: 6 }}
+                activeDot={{ r: 6, fill: 'var(--chart-1)', stroke: 'var(--card)', strokeWidth: 2 }}
               />
               <Line
                 type="monotone"
                 dataKey="minimumPayment"
                 name="Minimum Payment"
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--chart-2)"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 dot={{ 
-                  fill: 'hsl(var(--muted-foreground))',
+                  fill: 'var(--chart-2)',
+                  stroke: 'var(--card)',
+                  strokeWidth: 2,
                   r: 4,
-                  strokeWidth: 0,
                 }}
-                activeDot={{ r: 6 }}
+                activeDot={{ r: 6, fill: 'var(--chart-2)', stroke: 'var(--card)', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
