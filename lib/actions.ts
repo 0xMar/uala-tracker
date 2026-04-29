@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getBaseUrl } from '@/lib/url'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -100,11 +101,7 @@ export async function uploadStatement(
     const extractFormData = new FormData()
     extractFormData.append('file', file)
 
-    const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : 'http://localhost:3000'
-
-    const response = await fetch(`${baseUrl}/api/extract`, {
+    const response = await fetch(`${getBaseUrl()}/api/extract`, {
       method: 'POST',
       body: extractFormData,
     })
