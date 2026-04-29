@@ -87,7 +87,7 @@ interface AppSidebarProps {
 export function AppSidebar({ userEmail }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme()
 
   return (
     <aside
@@ -138,16 +138,16 @@ export function AppSidebar({ userEmail }: AppSidebarProps) {
       <div className="space-y-2 border-t border-border px-2 py-3">
         {/* Dark mode toggle */}
         <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
           aria-label="Toggle dark mode"
           className={cn(
             'flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors border border-transparent hover:bg-sidebar-accent hover:border-border text-sidebar-foreground/80 hover:text-sidebar-foreground',
             collapsed && 'justify-center px-0',
           )}
-          title={collapsed ? (theme === 'dark' ? 'Switch to light' : 'Switch to dark') : undefined}
+          title={collapsed ? (resolvedTheme === 'dark' ? 'Switch to light' : 'Switch to dark') : undefined}
         >
-          {theme === 'dark' ? <IconSun /> : <IconMoon />}
-          {!collapsed && <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>}
+          {resolvedTheme === 'dark' ? <IconSun /> : <IconMoon />}
+          {!collapsed && <span>{resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}</span>}
         </button>
 
         {/* User email */}
