@@ -50,9 +50,10 @@ function StatementItem({ statement }: StatementItemProps) {
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
+    <div className="rounded-lg border p-4 space-y-3">
+      {/* Top row: period + badges on left, toggle on right */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           <span className="font-semibold">{statement.period}</span>
           <Badge variant={optimisticPaid ? 'default' : 'secondary'}>
             {optimisticPaid ? 'Paid' : 'Pending'}
@@ -61,21 +62,20 @@ function StatementItem({ statement }: StatementItemProps) {
             <Badge variant="outline">v{statement.version}</Badge>
           )}
         </div>
-        <div className="flex gap-4 text-sm text-muted-foreground">
-          <span>Total: {formatCurrency(statement.total_debt_ars)}</span>
-          <span>Due: {formatDate(statement.due_date)}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        {isPending && <Spinner className="h-4 w-4" />}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Mark paid</span>
+        <div className="flex items-center gap-2 shrink-0">
+          {isPending && <Spinner className="h-4 w-4" />}
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Mark paid</span>
           <Switch
             checked={optimisticPaid}
             onCheckedChange={handleToggle}
             disabled={isPending}
           />
         </div>
+      </div>
+      {/* Bottom row: total + due date */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+        <span>Total: {formatCurrency(statement.total_debt_ars)}</span>
+        <span>Due: {formatDate(statement.due_date)}</span>
       </div>
     </div>
   )

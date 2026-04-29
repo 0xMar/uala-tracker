@@ -96,17 +96,17 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
           ) : (
             <div className="space-y-3">
               {typeBreakdown.map((item) => (
-                <div key={item.type} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={typeBadgeVariants[item.type] || 'outline'}>
+                <div key={item.type} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0 shrink">
+                    <Badge variant={typeBadgeVariants[item.type] || 'outline'} className="shrink-0">
                       {typeLabels[item.type] || item.type}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
                       ({item.count} txns)
                     </span>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{formatCurrency(item.total)}</p>
+                  <div className="text-right shrink-0">
+                    <p className="font-medium tabular-nums">{formatCurrency(item.total)}</p>
                     <p className="text-xs text-muted-foreground">
                       {item.percentage.toFixed(1)}%
                     </p>
@@ -128,17 +128,17 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
           ) : (
             <div className="space-y-3">
               {topMerchants.map((item, index) => (
-                <div key={item.merchant} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-muted-foreground w-5">
+                <div key={item.merchant} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-muted-foreground w-5 shrink-0">
                       {index + 1}.
                     </span>
-                    <span className="text-sm font-medium truncate max-w-[150px]">
+                    <span className="text-sm font-medium truncate">
                       {item.merchant}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{formatCurrency(item.total)}</p>
+                  <div className="text-right shrink-0">
+                    <p className="font-medium tabular-nums">{formatCurrency(item.total)}</p>
                     <p className="text-xs text-muted-foreground">
                       {item.count} {item.count === 1 ? 'txn' : 'txns'}
                     </p>
