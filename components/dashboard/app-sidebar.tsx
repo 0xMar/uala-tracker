@@ -13,7 +13,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet'
-import { useIsMobile } from '@/components/ui/use-mobile'
 import { cn } from '@/lib/utils'
 
 // Minimal inline icons to avoid adding a new icon library dependency
@@ -226,7 +225,6 @@ export function AppSidebarProvider({
   userEmail: string
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const isMobile = useIsMobile()
 
   return (
     <SidebarContext.Provider value={{ mobileOpen, setMobileOpen }}>
@@ -256,8 +254,7 @@ export function AppSidebarProvider({
         {/* Main content area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Mobile header with hamburger */}
-          {isMobile && (
-            <header className="flex h-14 items-center gap-4 border-b border-border bg-background px-4 md:hidden">
+          <header className="flex h-14 items-center gap-4 border-b border-border bg-background px-4 md:hidden">
               <Button
                 variant="ghost"
                 size="icon"
@@ -269,7 +266,6 @@ export function AppSidebarProvider({
               </Button>
               <span className="text-base font-bold tracking-tight">UALA Tracker</span>
             </header>
-          )}
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>
