@@ -94,6 +94,7 @@ function IconMenu() {
 type SidebarContextType = {
   mobileOpen: boolean
   setMobileOpen: (open: boolean) => void
+  isDemo: boolean
 }
 
 const SidebarContext = createContext<SidebarContextType | null>(null)
@@ -132,6 +133,7 @@ function SidebarContent({
 }) {
   const pathname = usePathname()
   const { resolvedTheme, setTheme } = useTheme()
+  const { isDemo } = useSidebar()
 
   return (
     <div className="flex flex-col h-full">
@@ -154,19 +156,26 @@ function SidebarContent({
       {/* Nav */}
       <nav className="flex-1 space-y-1 px-2 py-3">
         {navItems.map(({ href, label, Icon }) => {
-          const active = pathname === href
-          return (
+          const active = pathname === href || (isDemo && href === '/dashboard')
+          const className = cn(
+            'flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors border',
+            active
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground border-sidebar-primary'
+              : 'text-sidebar-foreground/80 border-transparent hover:bg-sidebar-accent hover:text-sidebar-foreground hover:border-border',
+            collapsed && 'justify-center px-0',
+            isDemo && !active && 'opacity-50 cursor-not-allowed',
+          )
+          return isDemo ? (
+            <span key={href} className={className} title={collapsed ? label : undefined}>
+              <Icon />
+              {!collapsed && <span>{label}</span>}
+            </span>
+          ) : (
             <Link
               key={href}
               href={href}
               onClick={onNavClick}
-              className={cn(
-                'flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors border',
-                active
-                  ? 'bg-sidebar-primary text-sidebar-primary-foreground border-sidebar-primary'
-                  : 'text-sidebar-foreground/80 border-transparent hover:bg-sidebar-accent hover:text-sidebar-foreground hover:border-border',
-                collapsed && 'justify-center px-0',
-              )}
+              className={className}
               title={collapsed ? label : undefined}
             >
               <Icon />
@@ -220,14 +229,16 @@ function SidebarContent({
 export function AppSidebarProvider({
   children,
   userEmail,
+  isDemo = false,
 }: {
   children: React.ReactNode
   userEmail: string
+  isDemo?: boolean
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <SidebarContext.Provider value={{ mobileOpen, setMobileOpen }}>
+    <SidebarContext.Provider value={{ mobileOpen, setMobileOpen, isDemo }}>
       <div className="flex h-screen w-full overflow-hidden bg-background">
         {/* Desktop Sidebar - hidden on mobile */}
         <DesktopSidebar userEmail={userEmail} />
