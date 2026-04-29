@@ -92,7 +92,12 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
                 name="Total Debt"
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                dot={{ fill: 'hsl(var(--primary))' }}
+                dot={{ 
+                  fill: 'hsl(var(--primary))',
+                  r: 4,
+                  strokeWidth: 0,
+                }}
+                activeDot={{ r: 6 }}
               />
               <Line
                 type="monotone"
@@ -101,7 +106,12 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
                 stroke="hsl(var(--muted-foreground))"
                 strokeWidth={2}
                 strokeDasharray="5 5"
-                dot={{ fill: 'hsl(var(--muted-foreground))' }}
+                dot={{ 
+                  fill: 'hsl(var(--muted-foreground))',
+                  r: 4,
+                  strokeWidth: 0,
+                }}
+                activeDot={{ r: 6 }}
               />
             </LineChart>
           </ResponsiveContainer>
