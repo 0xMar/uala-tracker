@@ -248,6 +248,7 @@ export function AppSidebarProvider({
           <SheetContent
             side="left"
             className="w-72 p-0 bg-sidebar text-sidebar-foreground [&>button]:hidden"
+            onFocusOutside={(e) => e.preventDefault()}
           >
             <SheetHeader className="sr-only">
               <SheetTitle>Navigation Menu</SheetTitle>
