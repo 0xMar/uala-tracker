@@ -1,0 +1,20 @@
+# Next.js
+.next/
+out/
+node_modules/
+.env
+.env.local
+.env*.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Data
+data/raw/
+
+# Misc
+.DS_Store
+*.log
