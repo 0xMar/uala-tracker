@@ -42,8 +42,9 @@ function groupInstallments(transactions: Transaction[]): InstallmentGroup[] {
   }>()
 
   for (const txn of installmentTxns) {
-    // transaction_date is the original purchase date, stays constant across all installments
-    const key = `${txn.merchant}-${txn.amount_ars}-${txn.installments_total}-${txn.transaction_date}`
+    // Group by merchant + installments_total only — tolerant to minor amount
+    // variations across statements (rounding differences between periods)
+    const key = `${txn.merchant}-${txn.installments_total}`
     
     const existing = groups.get(key)
     const current = txn.installment_current ?? 1
