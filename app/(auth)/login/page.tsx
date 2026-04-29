@@ -43,10 +43,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Sign in to your UALA tracker account</CardDescription>
+      <Card className="w-full max-w-sm border border-border shadow-md">
+        <CardHeader className="space-y-1 pb-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">UALA Tracker</p>
+          <CardTitle className="text-2xl">Sign in</CardTitle>
+          <CardDescription>Enter your email and password to continue</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -56,8 +57,8 @@ export default function LoginPage() {
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="text-sm font-semibold text-foreground">
                 Email
               </label>
               <Input
@@ -68,11 +69,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                className="border-border focus-visible:border-ring"
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="text-sm font-semibold text-foreground">
                 Password
               </label>
               <Input
@@ -83,6 +85,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="border-border focus-visible:border-ring"
               />
             </div>
 
@@ -91,9 +94,9 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <Link href="/sign-up" className="text-primary hover:underline">
+            <Link href="/sign-up" className="font-semibold text-foreground hover:underline">
               Sign up
             </Link>
           </div>

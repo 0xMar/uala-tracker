@@ -60,10 +60,11 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Create Account</CardTitle>
-          <CardDescription>Sign up for UALA tracker</CardDescription>
+      <Card className="w-full max-w-sm border border-border shadow-md">
+        <CardHeader className="space-y-1 pb-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">UALA Tracker</p>
+          <CardTitle className="text-2xl">Create account</CardTitle>
+          <CardDescription>Sign up to start tracking your statements</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
@@ -73,8 +74,8 @@ export default function SignUpPage() {
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
+            <div className="space-y-1.5">
+              <label htmlFor="email" className="text-sm font-semibold text-foreground">
                 Email
               </label>
               <Input
@@ -85,11 +86,12 @@ export default function SignUpPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                className="border-border focus-visible:border-ring"
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium">
+            <div className="space-y-1.5">
+              <label htmlFor="password" className="text-sm font-semibold text-foreground">
                 Password
               </label>
               <Input
@@ -100,11 +102,12 @@ export default function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="border-border focus-visible:border-ring"
               />
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium">
+            <div className="space-y-1.5">
+              <label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground">
                 Confirm Password
               </label>
               <Input
@@ -115,6 +118,7 @@ export default function SignUpPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                className="border-border focus-visible:border-ring"
               />
             </div>
 
@@ -123,9 +127,9 @@ export default function SignUpPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-foreground hover:underline">
               Sign in
             </Link>
           </div>
