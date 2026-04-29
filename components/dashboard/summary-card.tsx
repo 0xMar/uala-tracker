@@ -101,6 +101,17 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
             <p className="text-base font-medium">{formatCurrency(currentStatement.credit_limit)}</p>
           </div>
           <div>
+            <p className="text-sm text-muted-foreground">Available Credit</p>
+            <p className="text-base font-medium">
+              {currentStatement.credit_limit !== null && currentStatement.total_debt_ars !== null
+                ? formatCurrency(currentStatement.credit_limit - currentStatement.total_debt_ars)
+                : '-'}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+          <div>
             <p className="text-sm text-muted-foreground">TNA</p>
             <p className="text-base font-medium">
               {currentStatement.tna !== null ? `${currentStatement.tna}%` : '-'}
