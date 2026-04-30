@@ -1,25 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { formatCurrency, formatDate } from '@/lib/format'
 import type { Statement } from '@/lib/types'
-
-interface SummaryCardProps {
-  currentStatement: Statement | null
-  previousStatement: Statement | null
-}
-
-function formatCurrency(amount: number | null): string {
-  if (amount === null) return '-'
-  return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 function calculateDelta(current: number | null, previous: number | null): { value: number; percentage: number } | null {
   if (current === null || previous === null || previous === 0) return null

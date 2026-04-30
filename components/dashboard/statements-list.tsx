@@ -8,24 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/ui/spinner'
 import type { Statement } from '@/lib/types'
 import { toggleStatementPaid } from '@/lib/actions'
-
-interface StatementsListProps {
-  statements: Statement[]
-}
-
-function formatCurrency(amount: number | null): string {
-  if (amount === null) return '-'
-  return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-'
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+import { formatCurrency, formatDate } from '@/lib/format'
 
 interface StatementItemProps {
   statement: Statement

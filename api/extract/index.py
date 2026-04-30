@@ -17,7 +17,8 @@ async def extract_statement(
     x_api_key: str = Header(..., alias="X-API-Key"),
     content_length: int | None = Header(None),
 ) -> ExtractResponse:
-    if not EXTRACT_API_SECRET or x_api_key != EXTRACT_API_SECRET:
+    secret = EXTRACT_API_SECRET or os.environ.get("EXTRACT_API_SECRET")
+    if not secret or x_api_key != secret:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     if content_length is not None and content_length > MAX_PDF_SIZE:

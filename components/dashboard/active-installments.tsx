@@ -1,15 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { formatCurrency } from '@/lib/format'
 import type { Transaction } from '@/lib/types'
-
-interface ActiveInstallmentsProps {
-  transactions: Transaction[]
-}
-
-function formatCurrency(amount: number): string {
-  return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-}
 
 function formatMonth(date: Date): string {
   return date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' })

@@ -1,4 +1,4 @@
-import { getStatements, getLatestStatement, getAllTransactions } from '@/lib/supabase/queries'
+import { getStatements, getLatestStatement, getAllTransactions, getTransactionsByStatementId } from '@/lib/supabase/queries'
 import { SummaryCard } from '@/components/dashboard/summary-card'
 import { ActiveInstallments } from '@/components/dashboard/active-installments'
 import { PeriodBreakdown } from '@/components/dashboard/period-breakdown'
@@ -8,19 +8,19 @@ import { StatementsList } from '@/components/dashboard/statements-list'
 
 export default async function DashboardPage() {
   // Fetch all data server-side in parallel
-  const [statements, latestStatement, allTransactions] = await Promise.all([
+  const [statements, latestStatement] = await Promise.all([
     getStatements(),
     getLatestStatement(),
-    getAllTransactions(),
   ])
 
   // Get previous statement for delta calculation
   const previousStatement = statements.length > 1 ? statements[1] : null
 
-  // Filter transactions for the latest statement
-  const latestTransactions = latestStatement
-    ? allTransactions.filter((t) => t.statement_id === latestStatement.id)
-    : []
+  // Fetch transactions in parallel: latest statement only + all for installments
+  const [latestTransactions, allTransactions] = await Promise.all([
+    latestStatement ? getTransactionsByStatementId(latestStatement.id) : Promise.resolve([]),
+    getAllTransactions(),
+  ])
 
   return (
     <div className="flex flex-col gap-6 p-6">
