@@ -4,6 +4,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -16,6 +18,10 @@ from api.extract.process import extract, is_uala_pdf
 client = TestClient(app)
 
 PDF_PATH = Path("data/raw/ResumenDeCuentaTarjetaDeCredito_202603.pdf")
+
+# Set a test secret so the endpoint auth check passes (only if not already set)
+TEST_API_KEY = os.environ.setdefault("EXTRACT_API_SECRET", "test-secret")
+API_HEADERS = {"X-API-Key": TEST_API_KEY}
 
 
 # --- Unit: is_uala_pdf ---
@@ -77,6 +83,7 @@ def test_endpoint_success():
     pdf_bytes = PDF_PATH.read_bytes()
     response = client.post(
         "/api/extract",
+        headers=API_HEADERS,
         files={"file": ("statement.pdf", pdf_bytes, "application/pdf")},
     )
     assert response.status_code == 200
@@ -89,6 +96,7 @@ def test_endpoint_success():
 def test_endpoint_rejects_non_pdf():
     response = client.post(
         "/api/extract",
+        headers=API_HEADERS,
         files={"file": ("file.txt", b"not a pdf", "text/plain")},
     )
     assert response.status_code == 400
@@ -104,6 +112,7 @@ def test_endpoint_rejects_non_uala_pdf():
     )
     response = client.post(
         "/api/extract",
+        headers=API_HEADERS,
         files={"file": ("other.pdf", fake_pdf, "application/pdf")},
     )
     assert response.status_code == 422
