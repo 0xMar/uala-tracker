@@ -23,6 +23,10 @@ import {
 import type { Transaction } from '@/lib/types'
 import { formatCurrency, formatDate } from '@/lib/format'
 
+interface TransactionsTableProps {
+  transactions: Transaction[]
+}
+
 const typeLabels: Record<string, string> = {
   CONSUMO: 'Purchase',
   PAGO: 'Payment',

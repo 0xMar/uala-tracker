@@ -10,6 +10,10 @@ import type { Statement } from '@/lib/types'
 import { toggleStatementPaid } from '@/lib/actions'
 import { formatCurrency, formatDate } from '@/lib/format'
 
+interface StatementsListProps {
+  statements: Statement[]
+}
+
 interface StatementItemProps {
   statement: Statement
 }

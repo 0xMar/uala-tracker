@@ -3,6 +3,10 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/format'
 import type { Transaction } from '@/lib/types'
 
+interface PeriodBreakdownProps {
+  transactions: Transaction[]
+}
+
 interface TypeBreakdown {
   type: string
   total: number
