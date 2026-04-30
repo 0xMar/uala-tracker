@@ -3,6 +3,11 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/format'
 import type { Statement } from '@/lib/types'
 
+interface SummaryCardProps {
+  currentStatement: Statement | null
+  previousStatement: Statement | null
+}
+
 function calculateDelta(current: number | null, previous: number | null): { value: number; percentage: number } | null {
   if (current === null || previous === null || previous === 0) return null
   const value = current - previous

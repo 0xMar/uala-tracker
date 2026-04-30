@@ -4,6 +4,10 @@ import { Progress } from '@/components/ui/progress'
 import { formatCurrency } from '@/lib/format'
 import type { Transaction } from '@/lib/types'
 
+interface ActiveInstallmentsProps {
+  transactions: Transaction[]
+}
+
 function formatMonth(date: Date): string {
   return date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' })
 }
