@@ -15,9 +15,13 @@ EXTRACT_API_SECRET = os.environ.get("EXTRACT_API_SECRET")
 async def extract_statement(
     file: UploadFile = File(...),
     x_api_key: str = Header(..., alias="X-API-Key"),
+    content_length: int | None = Header(None),
 ) -> ExtractResponse:
     if not EXTRACT_API_SECRET or x_api_key != EXTRACT_API_SECRET:
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+    if content_length is not None and content_length > MAX_PDF_SIZE:
+        raise HTTPException(status_code=400, detail="File exceeds 5MB limit")
 
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
