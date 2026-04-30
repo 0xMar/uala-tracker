@@ -17,7 +17,7 @@ async def extract_statement(
     x_api_key: str = Header(..., alias="X-API-Key"),
     content_length: int | None = Header(None),
 ) -> ExtractResponse:
-    secret = EXTRACT_API_SECRET or os.environ.get("EXTRACT_API_SECRET")
+    secret = os.environ.get("EXTRACT_API_SECRET") or EXTRACT_API_SECRET
     if not secret or x_api_key != secret:
         raise HTTPException(status_code=401, detail="Unauthorized")
 

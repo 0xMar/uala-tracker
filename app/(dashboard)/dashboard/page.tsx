@@ -8,19 +8,19 @@ import { StatementsList } from '@/components/dashboard/statements-list'
 
 export default async function DashboardPage() {
   // Fetch all data server-side in parallel
-  const [statements, latestStatement] = await Promise.all([
+  const [statements, latestStatement, allTransactions] = await Promise.all([
     getStatements(),
     getLatestStatement(),
+    getAllTransactions(),
   ])
 
   // Get previous statement for delta calculation
   const previousStatement = statements.length > 1 ? statements[1] : null
 
-  // Fetch transactions in parallel: latest statement only + all for installments
-  const [latestTransactions, allTransactions] = await Promise.all([
-    latestStatement ? getTransactionsByStatementId(latestStatement.id) : Promise.resolve([]),
-    getAllTransactions(),
-  ])
+  // Fetch latest statement transactions directly (no client-side filter)
+  const latestTransactions = latestStatement
+    ? await getTransactionsByStatementId(latestStatement.id)
+    : []
 
   return (
     <div className="flex flex-col gap-6 p-6">
