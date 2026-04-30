@@ -13,7 +13,10 @@ export async function logout() {
 
 export async function toggleStatementPaid(statementId: string, isPaid: boolean) {
   const supabase = await createClient()
-  
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
   const { error } = await supabase
     .from('statements')
     .update({ is_paid: isPaid })
@@ -103,6 +106,7 @@ export async function uploadStatement(
 
     const response = await fetch(`${getBaseUrl()}/api/extract`, {
       method: 'POST',
+      headers: { 'X-API-Key': process.env.EXTRACT_API_SECRET ?? '' },
       body: extractFormData,
     })
 
@@ -145,10 +149,8 @@ export async function uploadStatement(
         .eq('statement_id', existingStatement.id)
 
       if (deleteTransactionsError) {
-        return {
-          success: false,
-          error: `Failed to delete old transactions: ${deleteTransactionsError.message}`,
-        }
+        console.error('Failed to delete old transactions:', deleteTransactionsError)
+        return { success: false, error: 'Failed to replace existing statement' }
       }
 
       // Update the statement with new data and increment version
@@ -173,10 +175,8 @@ export async function uploadStatement(
         .eq('id', existingStatement.id)
 
       if (updateError) {
-        return {
-          success: false,
-          error: `Failed to update statement: ${updateError.message}`,
-        }
+        console.error('Failed to update statement:', updateError)
+        return { success: false, error: 'Failed to update statement' }
       }
 
       statementId = existingStatement.id
@@ -215,7 +215,7 @@ export async function uploadStatement(
         }
         return {
           success: false,
-          error: `Failed to insert statement: ${insertError.message}`,
+          error: 'Failed to save statement',
         }
       }
 
@@ -241,10 +241,8 @@ export async function uploadStatement(
         .insert(transactionsToInsert)
 
       if (transactionsError) {
-        return {
-          success: false,
-          error: `Failed to insert transactions: ${transactionsError.message}`,
-        }
+        console.error('Failed to insert transactions:', transactionsError)
+        return { success: false, error: 'Failed to save transactions' }
       }
     }
 
@@ -258,9 +256,6 @@ export async function uploadStatement(
     }
   } catch (error) {
     console.error('Upload error:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to upload statement',
-    }
+    return { success: false, error: 'Failed to upload statement' }
   }
 }
