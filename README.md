@@ -44,7 +44,16 @@ cp .env.example .env.local
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+EXTRACT_API_SECRET=<random-secret>
 ```
+
+Generate a secure secret with:
+
+```bash
+openssl rand -base64 32
+```
+
+> `EXTRACT_API_SECRET` is a shared secret between Next.js and the Python extraction API. Both must have the same value — set it in `.env.local` and in your Vercel project settings.
 
 ### 4. Install Python dependencies
 
