@@ -1,4 +1,4 @@
-import { getStatements, getLatestStatement, getAllTransactions } from '@/lib/supabase/queries'
+import { getStatements, getLatestStatement, getAllTransactions, getTransactionsByStatementId } from '@/lib/supabase/queries'
 import { SummaryCard } from '@/components/dashboard/summary-card'
 import { ActiveInstallments } from '@/components/dashboard/active-installments'
 import { PeriodBreakdown } from '@/components/dashboard/period-breakdown'
@@ -17,9 +17,9 @@ export default async function DashboardPage() {
   // Get previous statement for delta calculation
   const previousStatement = statements.length > 1 ? statements[1] : null
 
-  // Filter transactions for the latest statement
+  // Fetch latest statement transactions directly (no client-side filter)
   const latestTransactions = latestStatement
-    ? allTransactions.filter((t) => t.statement_id === latestStatement.id)
+    ? await getTransactionsByStatementId(latestStatement.id)
     : []
 
   return (
