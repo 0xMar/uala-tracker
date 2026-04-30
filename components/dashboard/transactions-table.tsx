@@ -21,21 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { Transaction } from '@/lib/types'
-
-interface TransactionsTableProps {
-  transactions: Transaction[]
-}
-
-function formatCurrency(amount: number): string {
-  return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: 'short',
-  })
-}
+import { formatCurrency, formatDate } from '@/lib/format'
 
 const typeLabels: Record<string, string> = {
   CONSUMO: 'Purchase',
@@ -126,7 +112,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                 {paginatedTransactions.map((txn) => (
                   <TableRow key={txn.id}>
                     <TableCell className="text-muted-foreground">
-                      {formatDate(txn.transaction_date)}
+                      {formatDate(txn.transaction_date, { year: false })}
                     </TableCell>
                     <TableCell className="font-medium max-w-[200px] truncate">
                       {txn.merchant}

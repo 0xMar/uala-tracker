@@ -1,14 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { formatCurrency } from '@/lib/format'
 import type { Transaction } from '@/lib/types'
-
-interface PeriodBreakdownProps {
-  transactions: Transaction[]
-}
-
-function formatCurrency(amount: number): string {
-  return `$ ${amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-}
 
 interface TypeBreakdown {
   type: string
