@@ -19,9 +19,8 @@ client = TestClient(app)
 
 PDF_PATH = Path("data/raw/ResumenDeCuentaTarjetaDeCredito_202603.pdf")
 
-# Set a test secret so the endpoint auth check passes
-TEST_API_KEY = "test-secret"
-os.environ["EXTRACT_API_SECRET"] = TEST_API_KEY
+# Set a test secret so the endpoint auth check passes (only if not already set)
+TEST_API_KEY = os.environ.setdefault("EXTRACT_API_SECRET", "test-secret")
 API_HEADERS = {"X-API-Key": TEST_API_KEY}
 
 
