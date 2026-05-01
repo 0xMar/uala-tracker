@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { formatTasa } from '@/lib/tasas'
 import type { Statement } from '@/lib/types'
 
 interface CfteaEvolutionChartProps {
@@ -64,12 +65,12 @@ export function CfteaEvolutionChart({ statements }: CfteaEvolutionChartProps) {
                 className="text-muted-foreground"
               />
               <YAxis
-                tickFormatter={(value) => `${value}%`}
+                tickFormatter={(value) => formatTasa(value)}
                 tick={{ fontSize: 12 }}
                 className="text-muted-foreground"
               />
               <Tooltip
-                formatter={(value: number) => [`${value}%`, 'CFTEA con IVA']}
+                formatter={(value: number) => [formatTasa(value), 'CFTEA con IVA']}
                 labelFormatter={(label) => `Período: ${label}`}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
