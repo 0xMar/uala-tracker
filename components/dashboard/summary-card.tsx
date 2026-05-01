@@ -44,11 +44,11 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Current Statement</CardTitle>
+          <CardTitle className="text-lg">Resumen actual</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            No statements yet. Upload a PDF to get started.
+            Todavía no hay resúmenes. Subí un PDF para empezar.
           </p>
         </CardContent>
       </Card>
@@ -62,16 +62,16 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">
-            Statement {currentStatement.period}
+            Resumen {currentStatement.period}
           </CardTitle>
           <Badge variant={currentStatement.is_paid ? 'default' : 'secondary'}>
-            {currentStatement.is_paid ? 'Paid' : 'Pending'}
+            {currentStatement.is_paid ? 'Pagado' : 'Pendiente'}
           </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-sm text-muted-foreground">Total Debt</p>
+          <p className="text-sm text-muted-foreground">Deuda total</p>
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-bold">
               {formatCurrency(currentStatement.total_debt_ars)}
@@ -86,33 +86,33 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm text-muted-foreground">Minimum Payment</p>
+            <p className="text-sm text-muted-foreground">Pago mínimo</p>
             <p className="text-lg font-semibold">{formatCurrency(currentStatement.minimum_payment)}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Previous Balance</p>
+            <p className="text-sm text-muted-foreground">Saldo anterior</p>
             <p className="text-lg font-semibold">{formatCurrency(currentStatement.previous_balance)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-2 border-t">
           <div>
-            <p className="text-sm text-muted-foreground">Due Date</p>
+            <p className="text-sm text-muted-foreground">Fecha de vencimiento</p>
             <p className="text-base font-medium">{formatDate(currentStatement.due_date)}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Close Date</p>
+            <p className="text-sm text-muted-foreground">Fecha de cierre</p>
             <p className="text-base font-medium">{formatDate(currentStatement.close_date)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-2 border-t">
           <div>
-            <p className="text-sm text-muted-foreground">Credit Limit</p>
+            <p className="text-sm text-muted-foreground">Límite de crédito</p>
             <p className="text-base font-medium">{formatCurrency(currentStatement.credit_limit)}</p>
           </div>
           <div>
-            <p className="text-sm text-muted-foreground">Available Credit</p>
+            <p className="text-sm text-muted-foreground">Crédito disponible</p>
             <p className="text-base font-medium">
               {currentStatement.credit_limit !== null && currentStatement.total_debt_ars !== null
                 ? formatCurrency(currentStatement.credit_limit - currentStatement.total_debt_ars)

@@ -11,18 +11,18 @@ export default async function StatementsPage() {
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold">Statements</h1>
+        <h1 className="text-2xl font-bold">Resúmenes</h1>
         <p className="text-muted-foreground">
-          View and manage your credit card statements
+          Visualizá y gestioná tus resúmenes de tarjeta de crédito
         </p>
       </div>
 
       <StatementsList statements={statements} />
 
       <div className="space-y-1">
-        <h2 className="text-xl font-semibold">All Transactions</h2>
+        <h2 className="text-xl font-semibold">Todas las transacciones</h2>
         <p className="text-muted-foreground text-sm">
-          Browse all transactions across all statements
+          Navegá todas las transacciones de todos los resúmenes
         </p>
       </div>
 
