@@ -43,7 +43,7 @@ function StatementItem({ statement }: StatementItemProps) {
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           <span className="font-semibold">{statement.period}</span>
           <Badge variant={optimisticPaid ? 'default' : 'secondary'}>
-            {optimisticPaid ? 'Paid' : 'Pending'}
+            {optimisticPaid ? 'Pagado' : 'Pendiente'}
           </Badge>
           {statement.version > 1 && (
             <Badge variant="outline">v{statement.version}</Badge>
@@ -51,7 +51,7 @@ function StatementItem({ statement }: StatementItemProps) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           {isPending && <Spinner className="h-4 w-4" />}
-          <span className="text-sm text-muted-foreground whitespace-nowrap">Mark paid</span>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Marcar pagado</span>
           <Switch
             checked={optimisticPaid}
             onCheckedChange={handleToggle}
@@ -62,7 +62,7 @@ function StatementItem({ statement }: StatementItemProps) {
       {/* Bottom row: total + due date */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
         <span>Total: {formatCurrency(statement.total_debt_ars)}</span>
-        <span>Due: {formatDate(statement.due_date)}</span>
+        <span>Vencimiento: {formatDate(statement.due_date)}</span>
       </div>
     </div>
   )
@@ -76,12 +76,12 @@ export function StatementsList({ statements }: StatementsListProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">All Statements</CardTitle>
+        <CardTitle className="text-lg">Todos los resúmenes</CardTitle>
       </CardHeader>
       <CardContent>
         {statements.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No statements yet. Upload a PDF to get started.
+            Todavía no hay resúmenes. Subí un PDF para empezar.
           </p>
         ) : (
           <div className="space-y-3">
@@ -95,7 +95,7 @@ export function StatementsList({ statements }: StatementsListProps) {
                   variant="ghost"
                   onClick={() => setShowAll(!showAll)}
                 >
-                  {showAll ? 'Show Less' : `Show All (${statements.length})`}
+                  {showAll ? 'Ver menos' : `Ver todos (${statements.length})`}
                 </Button>
               </div>
             )}

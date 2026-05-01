@@ -117,9 +117,9 @@ export function useSidebar() {
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', Icon: IconDashboard },
-  { href: '/statements', label: 'Statements', Icon: IconStatements },
+  { href: '/statements', label: 'Resúmenes', Icon: IconStatements },
   { href: '/tasas', label: 'Tasas', Icon: IconTasas },
-  { href: '/upload', label: 'Upload PDF', Icon: IconUpload },
+  { href: '/upload', label: 'Subir PDF', Icon: IconUpload },
 ]
 
 interface AppSidebarProps {
@@ -204,10 +204,10 @@ function SidebarContent({
             'flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors border border-transparent hover:bg-sidebar-accent hover:border-border text-sidebar-foreground/80 hover:text-sidebar-foreground',
             collapsed && 'justify-center px-0',
           )}
-          title={collapsed ? (resolvedTheme === 'dark' ? 'Switch to light' : 'Switch to dark') : undefined}
+          title={collapsed ? (resolvedTheme === 'dark' ? 'Modo claro' : 'Modo oscuro') : undefined}
         >
           {resolvedTheme === 'dark' ? <IconSun /> : <IconMoon />}
-          {!collapsed && <span>{resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}</span>}
+          {!collapsed && <span>{resolvedTheme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</span>}
         </button>
 
         {/* User email */}
@@ -223,10 +223,10 @@ function SidebarContent({
               'flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors border border-border hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 text-sidebar-foreground/70',
               collapsed && 'justify-center px-0',
             )}
-            title={collapsed ? 'Sign out' : undefined}
+            title={collapsed ? 'Cerrar sesión' : undefined}
           >
             <IconLogOut />
-            {!collapsed && <span>Sign Out</span>}
+            {!collapsed && <span>Cerrar sesión</span>}
           </button>
         </form>
       </div>
@@ -260,8 +260,8 @@ export function AppSidebarProvider({
             onFocusOutside={(e) => e.preventDefault()}
           >
             <SheetHeader className="sr-only">
-              <SheetTitle>Navigation Menu</SheetTitle>
-              <SheetDescription>Main navigation for UALA Tracker</SheetDescription>
+              <SheetTitle>Menú de navegación</SheetTitle>
+              <SheetDescription>Navegación principal de UALA Tracker</SheetDescription>
             </SheetHeader>
             <SidebarContent
               userEmail={userEmail}
