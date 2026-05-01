@@ -170,7 +170,7 @@ def test_extract_returns_tasas_from_real_pdf():
 # --- Unit: StatementOut contract ---
 
 def test_statement_out_has_tasas_fields():
-    """StatementOut must expose tea, cftea_con_iva, cftea_sin_iva fields."""
+    """StatementOut must expose tea, cftea_con_iva, cftna_con_iva fields."""
     from api.extract.process import StatementOut
     from datetime import date
     s = StatementOut(
@@ -182,7 +182,7 @@ def test_statement_out_has_tasas_fields():
         tna=None,
         tea=None,
         cftea_con_iva=None,
-        cftea_sin_iva=None,
+        cftna_con_iva=None,
         close_date=None,
         due_date=None,
         next_close_date=None,
@@ -192,7 +192,7 @@ def test_statement_out_has_tasas_fields():
     )
     assert s.tea is None
     assert s.cftea_con_iva is None
-    assert s.cftea_sin_iva is None
+    assert s.cftna_con_iva is None
 
 
 def test_statement_out_tasas_stores_values():
@@ -207,7 +207,7 @@ def test_statement_out_tasas_stores_values():
         tna=97.0,
         tea=154.5,
         cftea_con_iva=312.8,
-        cftea_sin_iva=258.5,
+        cftna_con_iva=258.5,
         close_date=None,
         due_date=None,
         next_close_date=None,
@@ -218,7 +218,7 @@ def test_statement_out_tasas_stores_values():
     assert s.tna == 97.0
     assert s.tea == 154.5
     assert s.cftea_con_iva == 312.8
-    assert s.cftea_sin_iva == 258.5
+    assert s.cftna_con_iva == 258.5
 
 
 # --- Integration: POST /api/extract ---

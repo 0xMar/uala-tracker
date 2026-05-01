@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS statements (
   tna NUMERIC, -- Total annual rate (TNA) — actual from P1 table
   tea NUMERIC, -- Tasa Efectiva Anual — actual from P1 table
   cftea_con_iva NUMERIC, -- Costo Financiero Total Efectivo Anual con IVA — actual from P1 table
-  cftea_sin_iva NUMERIC, -- Costo Financiero Total Efectivo Anual sin IVA — actual from P1 table
+  cftna_con_iva NUMERIC, -- Costo Financiero Total Nominal Anual con IVA — actual from P1 table
   tna_anunciada NUMERIC, -- TNA anunciada en el bloque legal (próximo período)
   tea_anunciada NUMERIC, -- TEA anunciada en el bloque legal
   tem_anunciada NUMERIC, -- TEM anunciada en el bloque legal

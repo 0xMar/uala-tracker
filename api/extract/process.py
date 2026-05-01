@@ -45,7 +45,7 @@ class StatementOut(BaseModel):
     tna: float | None
     tea: float | None = None
     cftea_con_iva: float | None = None
-    cftea_sin_iva: float | None = None
+    cftna_con_iva: float | None = None
     # Announced tasas — sourced from legal block (next-period rates)
     tna_anunciada: float | None = None
     tea_anunciada: float | None = None
@@ -387,7 +387,7 @@ def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractRespons
         tna=actual_tasas["tna"] if actual_tasas["tna"] is not None else (float(tna_m.group(1)) if tna_m else None),
         tea=actual_tasas["tea"],
         cftea_con_iva=actual_tasas["cftea_con_iva"],
-        cftea_sin_iva=None,  # not in current PDF layout; reserved for future
+        cftna_con_iva=actual_tasas["cftna_con_iva"],
         # Announced tasas from legal block
         tna_anunciada=announced_tasas["tna"],
         tea_anunciada=announced_tasas["tea"],

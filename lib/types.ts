@@ -12,7 +12,7 @@ export interface Statement {
   tna: number | null;
   tea: number | null;
   cftea_con_iva: number | null;
-  cftea_sin_iva: number | null;
+  cftna_con_iva: number | null;
   // Announced tasas — sourced from legal block (next-period rates)
   tna_anunciada: number | null;
   tea_anunciada: number | null;
