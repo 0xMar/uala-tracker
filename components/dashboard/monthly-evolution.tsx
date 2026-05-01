@@ -45,11 +45,11 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Monthly Evolution</CardTitle>
+          <CardTitle className="text-lg">Evolución mensual</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            No data available. Upload statements to see the evolution chart.
+            Sin datos disponibles. Subí resúmenes para ver la evolución.
           </p>
         </CardContent>
       </Card>
@@ -59,7 +59,7 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Monthly Evolution</CardTitle>
+        <CardTitle className="text-lg">Evolución mensual</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
@@ -78,7 +78,7 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
               />
               <Tooltip 
                 formatter={(value: number, name: string) => [formatCurrency(value), name]}
-                labelFormatter={(label) => `Period: ${label}`}
+                labelFormatter={(label) => `Período: ${label}`}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
@@ -89,7 +89,7 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
               <Line
                 type="monotone"
                 dataKey="totalDebt"
-                name="Total Debt"
+                name="Deuda total"
                 stroke="var(--chart-1)"
                 strokeWidth={2}
                 dot={{ 
@@ -103,7 +103,7 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
               <Line
                 type="monotone"
                 dataKey="minimumPayment"
-                name="Minimum Payment"
+                name="Pago mínimo"
                 stroke="var(--chart-2)"
                 strokeWidth={2}
                 strokeDasharray="5 5"

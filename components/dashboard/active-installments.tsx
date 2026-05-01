@@ -99,11 +99,11 @@ export function ActiveInstallments({ transactions }: ActiveInstallmentsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Active Installments</CardTitle>
+        <CardTitle className="text-lg">Cuotas activas</CardTitle>
       </CardHeader>
       <CardContent>
         {installments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No active installment plans.</p>
+          <p className="text-sm text-muted-foreground">No hay planes de cuotas activos.</p>
         ) : (
           <div className="space-y-4">
             {installments.slice(0, 5).map((item, index) => (
@@ -118,20 +118,20 @@ export function ActiveInstallments({ transactions }: ActiveInstallmentsProps) {
                 </div>
                 <Progress value={item.progress} className="h-2" />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatCurrency(item.amountPerInstallment)}/month</span>
-                  <span>{formatCurrency(item.totalRemaining)} remaining</span>
+                  <span>{formatCurrency(item.amountPerInstallment)}/mes</span>
+                  <span>{formatCurrency(item.totalRemaining)} restante</span>
                 </div>
                 {item.remainingMonths.length > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Next: {item.remainingMonths.slice(0, 3).join(', ')}
-                    {item.remainingMonths.length > 3 && ` +${item.remainingMonths.length - 3} more`}
+                    Próximas: {item.remainingMonths.slice(0, 3).join(', ')}
+                    {item.remainingMonths.length > 3 && ` +${item.remainingMonths.length - 3} más`}
                   </p>
                 )}
               </div>
             ))}
             {installments.length > 5 && (
               <p className="text-sm text-muted-foreground text-center">
-                +{installments.length - 5} more installment plans
+                +{installments.length - 5} planes de cuotas más
               </p>
             )}
           </div>

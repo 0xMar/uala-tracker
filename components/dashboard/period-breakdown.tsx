@@ -66,9 +66,9 @@ function calculateTopMerchants(transactions: Transaction[]): MerchantBreakdown[]
 }
 
 const typeLabels: Record<string, string> = {
-  CONSUMO: 'Purchases',
-  PAGO: 'Payments',
-  IMPUESTO: 'Taxes',
+  CONSUMO: 'Consumos',
+  PAGO: 'Pagos',
+  IMPUESTO: 'Impuestos',
 }
 
 const typeBadgeVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -85,11 +85,11 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Spending by Type</CardTitle>
+          <CardTitle className="text-lg">Gastos por tipo</CardTitle>
         </CardHeader>
         <CardContent>
           {typeBreakdown.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No transactions in this period.</p>
+            <p className="text-sm text-muted-foreground">No hay transacciones en este período.</p>
           ) : (
             <div className="space-y-3">
               {typeBreakdown.map((item) => (
@@ -99,7 +99,7 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
                       {typeLabels[item.type] || item.type}
                     </Badge>
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      ({item.count} txns)
+                      ({item.count} mov.)
                     </span>
                   </div>
                   <div className="text-right shrink-0">
@@ -117,11 +117,11 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
 
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-lg">Top Merchants</CardTitle>
+          <CardTitle className="text-lg">Principales comercios</CardTitle>
         </CardHeader>
         <CardContent className="overflow-hidden">
           {topMerchants.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No purchase transactions.</p>
+            <p className="text-sm text-muted-foreground">No hay transacciones de consumo.</p>
           ) : (
             <div className="space-y-3 overflow-hidden">
               {topMerchants.map((item, index) => (
@@ -137,7 +137,7 @@ export function PeriodBreakdown({ transactions }: PeriodBreakdownProps) {
                   <div className="text-right shrink-0 flex-none">
                     <p className="font-medium tabular-nums whitespace-nowrap">{formatCurrency(item.total)}</p>
                     <p className="text-xs text-muted-foreground whitespace-nowrap">
-                      {item.count} {item.count === 1 ? 'txn' : 'txns'}
+                      {item.count} {item.count === 1 ? 'mov.' : 'mov.'}
                     </p>
                   </div>
                 </div>

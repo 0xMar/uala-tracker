@@ -27,7 +27,7 @@ export default async function DashboardPage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          View your credit card statements and transactions
+          Tus resúmenes y transacciones de tarjeta de crédito
         </p>
       </div>
 

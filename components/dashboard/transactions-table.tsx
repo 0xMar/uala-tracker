@@ -28,9 +28,9 @@ interface TransactionsTableProps {
 }
 
 const typeLabels: Record<string, string> = {
-  CONSUMO: 'Purchase',
-  PAGO: 'Payment',
-  IMPUESTO: 'Tax',
+  CONSUMO: 'Consumo',
+  PAGO: 'Pago',
+  IMPUESTO: 'Impuesto',
 }
 
 const typeBadgeVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
@@ -73,43 +73,43 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Transactions</CardTitle>
+        <CardTitle className="text-lg">Transacciones</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Input
-            placeholder="Search merchant..."
+            placeholder="Buscar comercio..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="max-w-xs"
           />
           <Select value={typeFilter} onValueChange={handleTypeChange}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="CONSUMO">Purchases</SelectItem>
-              <SelectItem value="PAGO">Payments</SelectItem>
-              <SelectItem value="IMPUESTO">Taxes</SelectItem>
-            </SelectContent>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Filtrar por tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="CONSUMO">Consumos</SelectItem>
+                <SelectItem value="PAGO">Pagos</SelectItem>
+                <SelectItem value="IMPUESTO">Impuestos</SelectItem>
+              </SelectContent>
           </Select>
         </div>
 
         {paginatedTransactions.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">
-            {transactions.length === 0 ? 'No transactions found.' : 'No matching transactions.'}
+            {transactions.length === 0 ? 'No hay transacciones.' : 'No hay transacciones que coincidan.'}
           </p>
         ) : (
           <>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Merchant</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Installments</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Comercio</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Cuotas</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -146,8 +146,8 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
             {totalPages > 1 && (
               <div className="flex items-center justify-between pt-2">
                 <p className="text-sm text-muted-foreground">
-                  Showing {(currentPage - 1) * pageSize + 1}-
-                  {Math.min(currentPage * pageSize, filteredTransactions.length)} of{' '}
+                  Mostrando {(currentPage - 1) * pageSize + 1}-
+                  {Math.min(currentPage * pageSize, filteredTransactions.length)} de{' '}
                   {filteredTransactions.length}
                 </p>
                 <div className="flex gap-2">
@@ -157,7 +157,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                   >
-                    Previous
+                    Anterior
                   </Button>
                   <Button
                     variant="outline"
@@ -165,7 +165,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                   >
-                    Next
+                    Siguiente
                   </Button>
                 </div>
               </div>
