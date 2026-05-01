@@ -13,43 +13,35 @@ import {
 } from 'recharts'
 import type { Statement } from '@/lib/types'
 
-interface MonthlyEvolutionProps {
+interface CfteaEvolutionChartProps {
   statements: Statement[]
 }
 
 interface ChartData {
   period: string
-  totalDebt: number
-  minimumPayment: number
-}
-
-function formatCurrency(value: number): string {
-  return `$ ${value.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+  cftea_con_iva: number | null
 }
 
 function prepareChartData(statements: Statement[]): ChartData[] {
-  // Sort by period ascending for the chart
   const sorted = [...statements].sort((a, b) => a.period.localeCompare(b.period))
-  
   return sorted.map((s) => ({
     period: s.period,
-    totalDebt: s.total_debt_ars ?? 0,
-    minimumPayment: s.minimum_payment ?? 0,
+    cftea_con_iva: s.cftea_con_iva,
   }))
 }
 
-export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
+export function CfteaEvolutionChart({ statements }: CfteaEvolutionChartProps) {
   const chartData = prepareChartData(statements)
 
   if (chartData.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Monthly Evolution</CardTitle>
+          <CardTitle className="text-lg">Evolución CFTEA con IVA</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            No data available. Upload statements to see the evolution chart.
+            No hay datos disponibles. Subí resúmenes para ver la evolución.
           </p>
         </CardContent>
       </Card>
@@ -59,26 +51,26 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Monthly Evolution</CardTitle>
+        <CardTitle className="text-lg">Evolución CFTEA con IVA</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="period" 
+              <XAxis
+                dataKey="period"
                 tick={{ fontSize: 12 }}
                 className="text-muted-foreground"
               />
-              <YAxis 
-                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+              <YAxis
+                tickFormatter={(value) => `${value}%`}
                 tick={{ fontSize: 12 }}
                 className="text-muted-foreground"
               />
-              <Tooltip 
-                formatter={(value: number, name: string) => [formatCurrency(value), name]}
-                labelFormatter={(label) => `Period: ${label}`}
+              <Tooltip
+                formatter={(value: number) => [`${value}%`, 'CFTEA con IVA']}
+                labelFormatter={(label) => `Período: ${label}`}
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
@@ -88,32 +80,19 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
               <Legend />
               <Line
                 type="monotone"
-                dataKey="totalDebt"
-                name="Total Debt"
-                stroke="var(--chart-1)"
+                dataKey="cftea_con_iva"
+                name="CFTEA con IVA"
+                stroke="var(--chart-3)"
                 strokeWidth={2}
-                dot={{ 
-                  fill: 'var(--chart-1)',
+                strokeDasharray="3 3"
+                connectNulls={false}
+                dot={{
+                  fill: 'var(--chart-3)',
                   stroke: 'var(--card)',
                   strokeWidth: 2,
                   r: 4,
                 }}
-                activeDot={{ r: 6, fill: 'var(--chart-1)', stroke: 'var(--card)', strokeWidth: 2 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="minimumPayment"
-                name="Minimum Payment"
-                stroke="var(--chart-2)"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={{ 
-                  fill: 'var(--chart-2)',
-                  stroke: 'var(--card)',
-                  strokeWidth: 2,
-                  r: 4,
-                }}
-                activeDot={{ r: 6, fill: 'var(--chart-2)', stroke: 'var(--card)', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: 'var(--chart-3)', stroke: 'var(--card)', strokeWidth: 2 }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -122,4 +101,3 @@ export function MonthlyEvolution({ statements }: MonthlyEvolutionProps) {
     </Card>
   )
 }
-

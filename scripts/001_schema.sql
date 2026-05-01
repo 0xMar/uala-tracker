@@ -9,7 +9,15 @@ CREATE TABLE IF NOT EXISTS statements (
   minimum_payment NUMERIC,
   previous_balance NUMERIC,
   credit_limit NUMERIC,
-  tna NUMERIC, -- Total annual rate
+  tna NUMERIC, -- Total annual rate (TNA) — actual from P1 table
+  tea NUMERIC, -- Tasa Efectiva Anual — actual from P1 table
+  cftea_con_iva NUMERIC, -- Costo Financiero Total Efectivo Anual con IVA — actual from P1 table
+  cftea_sin_iva NUMERIC, -- Costo Financiero Total Efectivo Anual sin IVA — actual from P1 table
+  tna_anunciada NUMERIC, -- TNA anunciada en el bloque legal (próximo período)
+  tea_anunciada NUMERIC, -- TEA anunciada en el bloque legal
+  tem_anunciada NUMERIC, -- TEM anunciada en el bloque legal
+  cftea_con_iva_anunciada NUMERIC, -- CFTEA con IVA anunciada en el bloque legal
+  cftna_con_iva_anunciada NUMERIC, -- CFTNA con IVA anunciada en el bloque legal
   close_date DATE,
   due_date DATE,
   next_close_date DATE,

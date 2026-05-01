@@ -41,7 +41,17 @@ class StatementOut(BaseModel):
     minimum_payment: float | None
     previous_balance: float | None
     credit_limit: float | None
+    # Actual tasas — sourced from P1 table
     tna: float | None
+    tea: float | None = None
+    cftea_con_iva: float | None = None
+    cftea_sin_iva: float | None = None
+    # Announced tasas — sourced from legal block (next-period rates)
+    tna_anunciada: float | None = None
+    tea_anunciada: float | None = None
+    tem_anunciada: float | None = None
+    cftea_con_iva_anunciada: float | None = None
+    cftna_con_iva_anunciada: float | None = None
     close_date: date | None
     due_date: date | None
     next_close_date: date | None
@@ -224,7 +234,94 @@ def _extract_statement_totals(text: str) -> dict[str, float | None]:
     }
 
 
-# --- Public API ---
+def _parse_percentage(text: str) -> float | None:
+    """Parse a percentage string like '113.00%' or '113,00%' to float."""
+    if not text:
+        return None
+    cleaned = text.replace("%", "").replace(",", ".").strip()
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
+def _empty_tasas() -> dict[str, float | None]:
+    return {"tna": None, "tea": None, "tem": None, "cftea_con_iva": None, "cftna_con_iva": None}
+
+
+def _parse_p1_tasas(p1_text: str) -> dict[str, float | None]:
+    """Extract tasas from the P1 'Tasas' table (Financiación row).
+
+    The table layout in the PDF text looks like:
+        Tasas
+        TNA $  TEA  TEM  CFTEA con IVA  CFTNA con IVA
+        Intereses Financiación Y Compensatorios en Pesos
+        113.00%  194.63%  9.29%  265.39%  136.73%
+        Intereses Punitorios
+        ...
+
+    After pypdf extraction the percentages appear on a single line or
+    consecutive lines after the 'Financiación' label.
+    """
+    result = _empty_tasas()
+    # Locate the Tasas section header
+    tasas_m = re.search(r"Tasas\s", p1_text)
+    if not tasas_m:
+        return result
+
+    # Grab text from the Tasas header onward
+    section = p1_text[tasas_m.start():]
+
+    # Find the Financiación row — collect the 5 percentages that follow it
+    fin_m = re.search(
+        r"Intereses\s+Financiaci[oó]n\s+Y\s+Compensatorios\s+en\s+Pesos\s*\n"
+        r"([\d.,]+%)\s*\n([\d.,]+%)\s*\n([\d.,]+%)\s*\n([\d.,]+%)\s*\n([\d.,]+%)",
+        section,
+        re.IGNORECASE,
+    )
+    if not fin_m:
+        # Try single-line variant: all 5 values on one line
+        fin_m = re.search(
+            r"Intereses\s+Financiaci[oó]n\s+Y\s+Compensatorios\s+en\s+Pesos\s*\n"
+            r"([\d.,]+%)\s+([\d.,]+%)\s+([\d.,]+%)\s+([\d.,]+%)\s+([\d.,]+%)",
+            section,
+            re.IGNORECASE,
+        )
+    if fin_m:
+        result["tna"] = _parse_percentage(fin_m.group(1))
+        result["tea"] = _parse_percentage(fin_m.group(2))
+        result["tem"] = _parse_percentage(fin_m.group(3))
+        result["cftea_con_iva"] = _parse_percentage(fin_m.group(4))
+        result["cftna_con_iva"] = _parse_percentage(fin_m.group(5))
+    return result
+
+
+def _parse_legal_tasas(legal_text: str) -> dict[str, float | None]:
+    """Extract announced tasas from the Legales block sentence.
+
+    Matches patterns like:
+        "119.00% (TNA); 211.22% (TEA); 9.78% (TEM); 289.96% (CFTEA con IVA); 143.99% (CFTNA con IVA)"
+    """
+    result = _empty_tasas()
+    m = re.search(
+        r"([\d.,]+)%\s*\(TNA\).*?"
+        r"([\d.,]+)%\s*\(TEA\).*?"
+        r"([\d.,]+)%\s*\(TEM\).*?"
+        r"([\d.,]+)%\s*\(CFTEA\s+con\s+IVA\).*?"
+        r"([\d.,]+)%\s*\(CFTNA\s+con\s+IVA\)",
+        legal_text,
+        re.IGNORECASE | re.DOTALL,
+    )
+    if m:
+        result["tna"] = _parse_percentage(m.group(1))
+        result["tea"] = _parse_percentage(m.group(2))
+        result["tem"] = _parse_percentage(m.group(3))
+        result["cftea_con_iva"] = _parse_percentage(m.group(4))
+        result["cftna_con_iva"] = _parse_percentage(m.group(5))
+    return result
+
+
+
 
 def is_uala_pdf(pdf_bytes: bytes) -> bool:
     try:
@@ -244,6 +341,11 @@ def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractRespons
     movement_text = _extract_movement_text(reader)
     lines = movement_text.split("\n")
 
+    # --- Tasas: P1 table → actual fields; legal block → announced fields (always both) ---
+    actual_tasas = _parse_p1_tasas(p1)
+    legal_text = reader.pages[-1].extract_text() or ""
+    announced_tasas = _parse_legal_tasas(legal_text)
+
     # --- Metadata from page 1 ---
     due_date_m = re.search(r"Fecha de vencimiento\n(\d{2} [A-Z][a-z]+ \d{4})", p1)
     close_date_m = re.search(r"Fecha de cierre\n(\d{2} [A-Z][a-z]+ \d{4})", p1)
@@ -251,6 +353,7 @@ def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractRespons
     prev_balance_m = re.search(r"(?:Resumen anterior|Deuda anterior)\n\$ ([\d\.]+,\d{2})", p1)
     total_debt_m = re.search(r"Tu deuda en pesos:\n\$ ([\d\.]+,\d{2})", p1)
     credit_limit_m = re.search(r"(\$[\d\.]+,\d{2})\s+de compra en 1 cuota", p1)
+    # tna is now sourced from the tasas dict; keep legacy regex as fallback
     tna_m = re.search(r"Intereses Financiación Y Compensatorios en Pesos\n([\d\.]+)%", p1)
 
     # Period facturado: "27 Feb 2026 - 30 Mar 2026"
@@ -280,7 +383,17 @@ def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractRespons
         minimum_payment=_parse_amount(min_payment_m.group(1)) if min_payment_m else None,
         previous_balance=_parse_amount(prev_balance_m.group(1)) if prev_balance_m else None,
         credit_limit=_parse_amount(credit_limit_m.group(1)) if credit_limit_m else None,
-        tna=float(tna_m.group(1)) if tna_m else None,
+        # Actual tasas from P1 table
+        tna=actual_tasas["tna"] if actual_tasas["tna"] is not None else (float(tna_m.group(1)) if tna_m else None),
+        tea=actual_tasas["tea"],
+        cftea_con_iva=actual_tasas["cftea_con_iva"],
+        cftea_sin_iva=None,  # not in current PDF layout; reserved for future
+        # Announced tasas from legal block
+        tna_anunciada=announced_tasas["tna"],
+        tea_anunciada=announced_tasas["tea"],
+        tem_anunciada=announced_tasas["tem"],
+        cftea_con_iva_anunciada=announced_tasas["cftea_con_iva"],
+        cftna_con_iva_anunciada=announced_tasas["cftna_con_iva"],
         close_date=close_date,
         due_date=due_date,
         next_close_date=next_close,
