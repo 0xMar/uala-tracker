@@ -52,18 +52,18 @@ export function PdfUpload() {
     const validatedFiles: FileStatus[] = selectedFiles.map((file) => {
       if (file.type !== 'application/pdf') {
         return {
-          file,
-          status: 'error' as const,
-          error: 'Only PDF files are allowed',
+            file,
+            status: 'error' as const,
+            error: 'Solo se permiten archivos PDF',
+          }
         }
-      }
 
-      if (file.size > MAX_FILE_SIZE) {
-        return {
-          file,
-          status: 'error' as const,
-          error: 'File size exceeds 5MB limit',
-        }
+        if (file.size > MAX_FILE_SIZE) {
+          return {
+            file,
+            status: 'error' as const,
+            error: 'El archivo supera el límite de 5MB',
+          }
       }
 
       return {
@@ -164,7 +164,7 @@ export function PdfUpload() {
     setFiles((prev) =>
       prev.map((f, idx) =>
         idx === duplicateFileIndex
-          ? { ...f, status: 'error', error: 'Skipped — duplicate period' }
+          ? { ...f, status: 'error', error: 'Omitido — período duplicado' }
           : f
       )
     )
@@ -178,7 +178,7 @@ export function PdfUpload() {
   function formatPeriod(period: string): string {
     const [year, month] = period.split('-')
     const date = new Date(parseInt(year), parseInt(month) - 1)
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    return date.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })
   }
 
   const pendingCount = files.filter((f) => f.status === 'pending').length
@@ -196,15 +196,15 @@ export function PdfUpload() {
     <>
       <Card className="max-w-lg mx-auto">
         <CardHeader>
-          <CardTitle>Upload Statements</CardTitle>
+          <CardTitle>Subir resúmenes</CardTitle>
           <CardDescription>
-            Upload one or more UALA credit card statement PDFs. They will be processed sequentially.
+            Subí uno o más resúmenes PDF de tu tarjeta Ualá. Se procesarán de forma secuencial.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="pdf-file">PDF Files</Label>
+              <Label htmlFor="pdf-file">Archivos PDF</Label>
               <Input
                 ref={fileInputRef}
                 id="pdf-file"
@@ -216,7 +216,7 @@ export function PdfUpload() {
                 className="cursor-pointer"
               />
               <p className="text-xs text-muted-foreground">
-                Maximum file size: 5MB per file. Multiple files supported.
+                Tamaño máximo: 5MB por archivo. Se admiten múltiples archivos.
               </p>
             </div>
 
@@ -247,22 +247,22 @@ export function PdfUpload() {
                     </div>
                     <div className="shrink-0 text-xs font-medium">
                       {entry.status === 'pending' && (
-                        <span className="text-muted-foreground">Pending</span>
+                        <span className="text-muted-foreground">Pendiente</span>
                       )}
                       {entry.status === 'uploading' && (
                         <span className="flex items-center gap-1.5 text-foreground">
                           <Spinner className="h-3 w-3" />
-                          Uploading
+                          Subiendo
                         </span>
                       )}
                       {entry.status === 'success' && (
-                        <span className="text-green-600 dark:text-green-400">Done</span>
+                        <span className="text-green-600 dark:text-green-400">Listo</span>
                       )}
                       {entry.status === 'error' && (
-                        <span className="text-destructive">Failed</span>
+                        <span className="text-destructive">Error</span>
                       )}
                       {entry.status === 'duplicate' && (
-                        <span className="text-yellow-600 dark:text-yellow-400">Duplicate</span>
+                        <span className="text-yellow-600 dark:text-yellow-400">Duplicado</span>
                       )}
                     </div>
                   </div>
@@ -274,8 +274,8 @@ export function PdfUpload() {
             {isUploading && files.length > 1 && (
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Processing files...</span>
-                  <span>{successCount} / {files.length} done</span>
+                  <span>Procesando archivos...</span>
+                  <span>{successCount} / {files.length} listos</span>
                 </div>
                 <Progress value={progressPercent} className="h-1.5" />
               </div>
@@ -285,8 +285,8 @@ export function PdfUpload() {
             {allDone && successCount > 0 && (
               <div className="rounded-md bg-green-500/10 p-3 text-green-600 dark:text-green-400 text-sm">
                 {successCount === 1
-                  ? 'Statement uploaded successfully! Redirecting...'
-                  : `${successCount} statement${successCount > 1 ? 's' : ''} uploaded successfully! Redirecting...`}
+                  ? '¡Resumen subido con éxito! Redirigiendo...'
+                  : `${successCount} resúmenes subidos con éxito. Redirigiendo...`}
               </div>
             )}
 
@@ -298,12 +298,12 @@ export function PdfUpload() {
               {isUploading ? (
                 <>
                   <Spinner className="mr-2 h-4 w-4" />
-                  {files.length > 1 ? `Uploading ${currentFileIndex !== null ? currentFileIndex + 1 : ''}/${files.length}...` : 'Uploading...'}
+                  {files.length > 1 ? `Subiendo ${currentFileIndex !== null ? currentFileIndex + 1 : ''}/${files.length}...` : 'Subiendo...'}
                 </>
               ) : files.length > 1 ? (
-                `Upload ${files.length} Statements`
+                `Subir ${files.length} resúmenes`
               ) : (
-                'Upload Statement'
+                'Subir resumen'
               )}
             </Button>
           </form>
@@ -313,25 +313,25 @@ export function PdfUpload() {
       <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Statement Already Exists</AlertDialogTitle>
+            <AlertDialogTitle>Resumen ya existente</AlertDialogTitle>
             <AlertDialogDescription>
               {duplicateFile && (
                 <>
-                  <span className="font-medium">{duplicateFile.file.name}</span> — a statement for{' '}
+                  <span className="font-medium">{duplicateFile.file.name}</span> — ya existe un resumen para{' '}
                   <span className="font-semibold">
                     {duplicateFile.duplicatePeriod
                       ? formatPeriod(duplicateFile.duplicatePeriod)
-                      : 'this period'}
-                  </span>{' '}
-                  already exists. Do you want to replace it?
+                      : 'este período'}
+                  </span>
+                  . ¿Querés reemplazarlo?
                   <br />
                   <br />
-                  This will delete the existing statement and all its transactions.
+                  Esto eliminará el resumen existente y todas sus transacciones.
                   {files.length > 1 && (
                     <>
                       <br />
                       <br />
-                      Remaining files will continue to be processed regardless of your choice.
+                      Los archivos restantes se seguirán procesando independientemente de tu elección.
                     </>
                   )}
                 </>
@@ -340,10 +340,10 @@ export function PdfUpload() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancelReplace}>
-              Skip This File
+              Omitir archivo
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmReplace}>
-              Replace Statement
+              Reemplazar resumen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
