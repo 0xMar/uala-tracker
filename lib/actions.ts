@@ -43,7 +43,17 @@ interface ExtractedStatement {
   minimum_payment: number | null
   previous_balance: number | null
   credit_limit: number | null
+  // Actual tasas
   tna: number | null
+  tea: number | null
+  cftea_con_iva: number | null
+  cftea_sin_iva: number | null
+  // Announced tasas
+  tna_anunciada: number | null
+  tea_anunciada: number | null
+  tem_anunciada: number | null
+  cftea_con_iva_anunciada: number | null
+  cftna_con_iva_anunciada: number | null
   close_date: string | null
   due_date: string | null
   next_close_date: string | null
@@ -163,6 +173,14 @@ export async function uploadStatement(
           previous_balance: extractedStatement.previous_balance,
           credit_limit: extractedStatement.credit_limit,
           tna: extractedStatement.tna,
+          tea: extractedStatement.tea,
+          cftea_con_iva: extractedStatement.cftea_con_iva,
+          cftea_sin_iva: extractedStatement.cftea_sin_iva,
+          tna_anunciada: extractedStatement.tna_anunciada,
+          tea_anunciada: extractedStatement.tea_anunciada,
+          tem_anunciada: extractedStatement.tem_anunciada,
+          cftea_con_iva_anunciada: extractedStatement.cftea_con_iva_anunciada,
+          cftna_con_iva_anunciada: extractedStatement.cftna_con_iva_anunciada,
           close_date: extractedStatement.close_date,
           due_date: extractedStatement.due_date,
           next_close_date: extractedStatement.next_close_date,
@@ -194,6 +212,14 @@ export async function uploadStatement(
           previous_balance: extractedStatement.previous_balance,
           credit_limit: extractedStatement.credit_limit,
           tna: extractedStatement.tna,
+          tea: extractedStatement.tea,
+          cftea_con_iva: extractedStatement.cftea_con_iva,
+          cftea_sin_iva: extractedStatement.cftea_sin_iva,
+          tna_anunciada: extractedStatement.tna_anunciada,
+          tea_anunciada: extractedStatement.tea_anunciada,
+          tem_anunciada: extractedStatement.tem_anunciada,
+          cftea_con_iva_anunciada: extractedStatement.cftea_con_iva_anunciada,
+          cftna_con_iva_anunciada: extractedStatement.cftna_con_iva_anunciada,
           close_date: extractedStatement.close_date,
           due_date: extractedStatement.due_date,
           next_close_date: extractedStatement.next_close_date,
@@ -259,3 +285,5 @@ export async function uploadStatement(
     return { success: false, error: 'Failed to upload statement' }
   }
 }
+
+

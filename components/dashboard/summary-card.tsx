@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { formatTasa } from '@/lib/tasas'
 import type { Statement } from '@/lib/types'
 
 interface SummaryCardProps {
@@ -102,6 +103,12 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
             <p className="text-sm text-muted-foreground">TNA</p>
             <p className="text-base font-medium">
               {currentStatement.tna !== null ? `${currentStatement.tna}%` : '-'}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">CFTEA con IVA</p>
+            <p className="text-base font-medium">
+              {formatTasa(currentStatement.cftea_con_iva)}
             </p>
           </div>
         </div>
