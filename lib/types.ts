@@ -8,7 +8,17 @@ export interface Statement {
   minimum_payment: number | null;
   previous_balance: number | null;
   credit_limit: number | null;
+  // Actual tasas — sourced from P1 table
   tna: number | null;
+  tea: number | null;
+  cftea_con_iva: number | null;
+  cftea_sin_iva: number | null;
+  // Announced tasas — sourced from legal block (next-period rates)
+  tna_anunciada: number | null;
+  tea_anunciada: number | null;
+  tem_anunciada: number | null;
+  cftea_con_iva_anunciada: number | null;
+  cftna_con_iva_anunciada: number | null;
   close_date: string | null;
   due_date: string | null;
   next_close_date: string | null;

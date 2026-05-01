@@ -20,10 +20,20 @@ yarn-error.log*
 .env*
 !.env.example
 
+# tooling
+.atl
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts__pycache__/
+next-env.d.ts
+__pycache__/
 *.pyc
+
+# PDF fixtures and raw data
+data/
+
+# Session files
+session-*.md
