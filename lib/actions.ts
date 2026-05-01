@@ -47,7 +47,7 @@ interface ExtractedStatement {
   tna: number | null
   tea: number | null
   cftea_con_iva: number | null
-  cftea_sin_iva: number | null
+  cftna_con_iva: number | null
   // Announced tasas
   tna_anunciada: number | null
   tea_anunciada: number | null
@@ -175,7 +175,7 @@ export async function uploadStatement(
           tna: extractedStatement.tna,
           tea: extractedStatement.tea,
           cftea_con_iva: extractedStatement.cftea_con_iva,
-          cftea_sin_iva: extractedStatement.cftea_sin_iva,
+          cftna_con_iva: extractedStatement.cftna_con_iva,
           tna_anunciada: extractedStatement.tna_anunciada,
           tea_anunciada: extractedStatement.tea_anunciada,
           tem_anunciada: extractedStatement.tem_anunciada,
@@ -214,7 +214,7 @@ export async function uploadStatement(
           tna: extractedStatement.tna,
           tea: extractedStatement.tea,
           cftea_con_iva: extractedStatement.cftea_con_iva,
-          cftea_sin_iva: extractedStatement.cftea_sin_iva,
+          cftna_con_iva: extractedStatement.cftna_con_iva,
           tna_anunciada: extractedStatement.tna_anunciada,
           tea_anunciada: extractedStatement.tea_anunciada,
           tem_anunciada: extractedStatement.tem_anunciada,
