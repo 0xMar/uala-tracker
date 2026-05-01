@@ -1,12 +1,35 @@
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/format'
-import { formatTasa } from '@/lib/tasas'
+import { formatTasa, computeTasasStatus, type TasasStatus } from '@/lib/tasas'
 import type { Statement } from '@/lib/types'
 
 interface SummaryCardProps {
   currentStatement: Statement | null
   previousStatement: Statement | null
+}
+
+function TasasStatusBadge({ status }: { status: TasasStatus }) {
+  if (status === 'Coincide') {
+    return (
+      <Badge className="bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 font-medium">
+        ✓ Coincide
+      </Badge>
+    )
+  }
+  if (status === 'No coincide') {
+    return (
+      <Badge className="bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800 font-medium">
+        ⚠ No coincide
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="secondary" className="font-medium">
+      Sin dato
+    </Badge>
+  )
 }
 
 function calculateDelta(current: number | null, previous: number | null): { value: number; percentage: number } | null {
@@ -98,19 +121,27 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-          <div>
-            <p className="text-sm text-muted-foreground">TNA</p>
-            <p className="text-base font-medium">
-              {currentStatement.tna !== null ? `${currentStatement.tna}%` : '-'}
-            </p>
+        <div className="pt-2 border-t space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">Tasas</p>
+            <TasasStatusBadge status={computeTasasStatus(currentStatement, previousStatement)} />
           </div>
-          <div>
-            <p className="text-sm text-muted-foreground">CFTEA con IVA</p>
-            <p className="text-base font-medium">
-              {formatTasa(currentStatement.cftea_con_iva)}
-            </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">TNA</p>
+              <p className="text-base font-medium">{formatTasa(currentStatement.tna)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">CFTEA con IVA</p>
+              <p className="text-base font-medium">{formatTasa(currentStatement.cftea_con_iva)}</p>
+            </div>
           </div>
+          <Link
+            href="/tasas"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+          >
+            Ver historial de tasas →
+          </Link>
         </div>
       </CardContent>
     </Card>
