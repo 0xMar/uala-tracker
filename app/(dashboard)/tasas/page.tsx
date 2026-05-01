@@ -65,8 +65,7 @@ export default async function TasasPage() {
                   { label: 'TNA', value: latestStatement.tna },
                   { label: 'TEA', value: latestStatement.tea },
                   { label: 'CFTEA con IVA', value: latestStatement.cftea_con_iva },
-                  { label: 'CFTEA sin IVA', value: latestStatement.cftea_sin_iva },
-                  { label: 'CFTNA con IVA', value: latestStatement.cftna_con_iva_anunciada },
+                  { label: 'CFTNA con IVA', value: latestStatement.cftna_con_iva },
                 ]}
               />
             </CardContent>
