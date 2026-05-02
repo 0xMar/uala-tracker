@@ -1,0 +1,19 @@
+[project]
+name = "uala-tracker"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.115.12",
+    "pypdf==5.4.0",
+    "pydantic==2.11.3",
+    "python-multipart==0.0.27",
+    "httpx==0.28.1",
+    "python-jose[cryptography]==3.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "PyJWT==2.10.1",
+    "pytest==8.3.5",
+    "anyio[trio]==4.13.0",
+]
