@@ -1,13 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { createApiKey, listApiKeys, revokeApiKey, type ApiKey } from '@/lib/api-keys'
 import { Copy, Key, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface RevokeDialogState {
+  open: boolean
+  keyId: string | null
+  keyName: string
+}
 
 export function ApiKeysManager() {
   const [keys, setKeys] = useState<ApiKey[]>([])
@@ -15,21 +31,26 @@ export function ApiKeysManager() {
   const [generatedKey, setGeneratedKey] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [revokeDialog, setRevokeDialog] = useState<RevokeDialogState>({
+    open: false,
+    keyId: null,
+    keyName: '',
+  })
 
-  useEffect(() => {
-    loadKeys()
-  }, [])
-
-  async function loadKeys() {
+  const loadKeys = useCallback(async () => {
     setIsLoading(true)
     const data = await listApiKeys()
     setKeys(data)
     setIsLoading(false)
-  }
+  }, [])
+
+  useEffect(() => {
+    loadKeys()
+  }, [loadKeys])
 
   async function handleCreate() {
     if (!newKeyName.trim()) {
-      toast.error('Please enter a name for the API key')
+      toast.error('Ingresá un nombre para la API key')
       return
     }
 
@@ -41,46 +62,50 @@ export function ApiKeysManager() {
       setGeneratedKey(result.key)
       setNewKeyName('')
       await loadKeys()
-      toast.success('API key created successfully')
+      toast.success('API key creada correctamente')
     } else {
-      toast.error(result.error || 'Failed to create API key')
+      toast.error(result.error || 'Error al crear la API key')
     }
   }
 
-  async function handleRevoke(keyId: string) {
-    if (!confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
-      return
-    }
+  function openRevokeDialog(keyId: string, keyName: string) {
+    setRevokeDialog({ open: true, keyId, keyName })
+  }
 
-    const result = await revokeApiKey(keyId)
+  async function handleRevoke() {
+    if (!revokeDialog.keyId) return
+
+    const result = await revokeApiKey(revokeDialog.keyId)
+    setRevokeDialog({ open: false, keyId: null, keyName: '' })
+
     if (result.success) {
       await loadKeys()
-      toast.success('API key revoked')
+      toast.success('API key revocada')
     } else {
-      toast.error(result.error || 'Failed to revoke API key')
+      toast.error(result.error || 'Error al revocar la API key')
     }
   }
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text)
-    toast.success('Copied to clipboard')
+    toast.success('Copiado al portapapeles')
   }
 
   return (
     <div className="space-y-6">
       {/* Generated key alert */}
       {generatedKey && (
-        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
+        <Alert className="border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/30">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
           <AlertDescription className="space-y-2">
-            <p className="font-semibold text-green-900 dark:text-green-100">
-              API key created successfully
+            <p className="font-semibold text-emerald-900 dark:text-emerald-100">
+              API key creada correctamente
             </p>
-            <p className="text-sm text-green-800 dark:text-green-200">
-              Copy this key now — it will not be shown again.
+            <p className="text-sm text-emerald-800 dark:text-emerald-200">
+              Copiá esta key ahora — no se mostrará de nuevo.
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <code className="flex-1 p-2 bg-white dark:bg-gray-900 rounded border text-xs break-all">
+              <code className="flex-1 p-2 bg-background rounded border text-xs break-all font-mono">
                 {generatedKey}
               </code>
               <Button
@@ -97,7 +122,7 @@ export function ApiKeysManager() {
               onClick={() => setGeneratedKey(null)}
               className="mt-2"
             >
-              Dismiss
+              Cerrar
             </Button>
           </AlertDescription>
         </Alert>
@@ -106,21 +131,21 @@ export function ApiKeysManager() {
       {/* Create new key */}
       <Card>
         <CardHeader>
-          <CardTitle>Create API Key</CardTitle>
+          <CardTitle className="text-lg">Crear API Key</CardTitle>
           <CardDescription>
-            Generate a new API key for automation (e.g., Make.com workflows)
+            Generá una nueva API key para automatización (ej: workflows de Make.com)
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
             <Input
-              placeholder="Key name (e.g., Make.com automation)"
+              placeholder="Nombre de la key (ej: Automatización Make.com)"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             />
             <Button onClick={handleCreate} disabled={isCreating}>
-              {isCreating ? 'Creating...' : 'Create'}
+              {isCreating ? 'Creando...' : 'Crear'}
             </Button>
           </div>
         </CardContent>
@@ -129,16 +154,16 @@ export function ApiKeysManager() {
       {/* Existing keys */}
       <Card>
         <CardHeader>
-          <CardTitle>Your API Keys</CardTitle>
+          <CardTitle className="text-lg">Tus API Keys</CardTitle>
           <CardDescription>
-            Manage your existing API keys
+            Administrá tus API keys existentes
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <p className="text-sm text-muted-foreground">Cargando...</p>
           ) : keys.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No API keys yet</p>
+            <p className="text-sm text-muted-foreground">Todavía no hay API keys</p>
           ) : (
             <div className="space-y-3">
               {keys.map((key) => (
@@ -153,13 +178,13 @@ export function ApiKeysManager() {
                       <p className="text-xs text-muted-foreground">
                         {key.key_prefix}...
                         {key.revoked_at ? (
-                          <span className="ml-2 text-red-600">• Revoked</span>
+                          <span className="ml-2 text-destructive">• Revocada</span>
                         ) : key.last_used_at ? (
                           <span className="ml-2">
-                            • Last used {new Date(key.last_used_at).toLocaleDateString()}
+                            • Último uso: {new Date(key.last_used_at).toLocaleDateString('es-AR')}
                           </span>
                         ) : (
-                          <span className="ml-2">• Never used</span>
+                          <span className="ml-2">• Sin usar</span>
                         )}
                       </p>
                     </div>
@@ -168,9 +193,10 @@ export function ApiKeysManager() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleRevoke(key.id)}
+                      onClick={() => openRevokeDialog(key.id, key.name)}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
-                      <Trash2 className="h-4 w-4 text-red-600" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
@@ -184,13 +210,42 @@ export function ApiKeysManager() {
       <Alert>
         <AlertCircle className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          <p className="font-semibold mb-1">How to use API keys</p>
+          <p className="font-semibold mb-1">Cómo usar las API keys</p>
           <p>
-            Include your API key in the <code className="px-1 py-0.5 bg-muted rounded">X-API-Key</code> header
-            when making requests to <code className="px-1 py-0.5 bg-muted rounded">/api/ingest</code>.
+            Incluí tu API key en el header <code className="px-1 py-0.5 bg-muted rounded font-mono text-xs">X-API-Key</code>{' '}
+            al hacer requests a <code className="px-1 py-0.5 bg-muted rounded font-mono text-xs">/api/ingest</code>.
           </p>
         </AlertDescription>
       </Alert>
+
+      {/* Revoke confirmation dialog */}
+      <AlertDialog
+        open={revokeDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRevokeDialog({ open: false, keyId: null, keyName: '' })
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Revocar API key?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Estás por revocar la API key &quot;{revokeDialog.keyName}&quot;. Esta acción no se puede deshacer
+              y las automatizaciones que usen esta key dejarán de funcionar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleRevoke}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Revocar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
