@@ -1,3 +1,4 @@
+import logging
 import os
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
@@ -5,6 +6,8 @@ from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 from .process import ExtractResponse, extract, is_uala_pdf
 
 app = FastAPI()
+
+logger = logging.getLogger(__name__)
 
 MAX_PDF_SIZE = 5 * 1024 * 1024  # 5MB
 
@@ -45,4 +48,5 @@ async def extract_statement(
     try:
         return extract(pdf_bytes, filename=file.filename or "statement.pdf")
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error("PDF extraction failed: %s", e)
+        raise HTTPException(status_code=400, detail="Could not process the PDF file")
