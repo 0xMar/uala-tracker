@@ -27,7 +27,7 @@ PDF_PATH = Path("data/raw/ResumenDeCuentaTarjetaDeCredito_202603.pdf")
 
 TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
 TEST_API_KEY = "uala_test_key_1234567890abcdef"
-TEST_KEY_HASH = hmac.new(b"test-hmac-secret", TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
+TEST_KEY_HASH = hmac.new(os.environ["API_KEY_HMAC_SECRET"].encode(), TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
 
 
 # --- Auth ---
@@ -360,8 +360,9 @@ def test_patch_failure_logs_warning_but_succeeds():
 def test_api_key_uses_hmac_not_plain_sha256():
     """API key validation must use HMAC-SHA-256, not plain SHA-256."""
     # A plain SHA-256 hash of TEST_API_KEY would be different from HMAC hash
+    secret = os.environ["API_KEY_HMAC_SECRET"].encode()
     plain_sha256 = hashlib.sha256(TEST_API_KEY.encode()).hexdigest()
-    hmac_sha256 = hmac.new(b"test-hmac-secret", TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
+    hmac_sha256 = hmac.new(secret, TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
 
     # They must be different (proving HMAC adds the secret)
     assert plain_sha256 != hmac_sha256
