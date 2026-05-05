@@ -26,12 +26,14 @@ API_HEADERS = {"X-API-Key": TEST_API_KEY}
 
 # --- Unit: is_uala_pdf ---
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_is_uala_pdf_true():
     assert PDF_PATH.exists(), "Put a Ualá PDF in data/raw/ to run integration tests"
     valid, _ = is_uala_pdf(PDF_PATH.read_bytes())
     assert valid is True
 
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_is_uala_pdf_wilobank():
     """PDFs from before the rebrand say 'Wilobank S.A.U.' — must also be accepted."""
     wilobank_pdf = Path("data/raw/ResumenDeCuentaTarjetaDeCredito_202409.pdf")
@@ -48,6 +50,7 @@ def test_is_uala_pdf_false():
 
 # --- Unit: extract ---
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_extract_returns_correct_structure():
     pdf_bytes = PDF_PATH.read_bytes()
     result = extract(pdf_bytes)
@@ -61,6 +64,7 @@ def test_extract_returns_correct_structure():
     assert len(result.transactions) > 0
 
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_extract_transactions_have_required_fields():
     pdf_bytes = PDF_PATH.read_bytes()
     result = extract(pdf_bytes)
@@ -74,6 +78,7 @@ def test_extract_transactions_have_required_fields():
         assert txn.installments_total >= 1
 
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_extract_reconciliation_ok():
     pdf_bytes = PDF_PATH.read_bytes()
     result = extract(pdf_bytes)
@@ -160,6 +165,7 @@ def test_parse_legal_tasas_returns_none_when_absent():
 
 # --- Integration: extract() returns tasas from real PDF ---
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_extract_returns_tasas_from_real_pdf():
     """extract() must populate tea and cftea_con_iva from the real 2026-03 PDF."""
     pdf_bytes = PDF_PATH.read_bytes()
@@ -226,6 +232,7 @@ def test_statement_out_tasas_stores_values():
 
 # --- Integration: POST /api/extract ---
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_endpoint_success():
     pdf_bytes = PDF_PATH.read_bytes()
     response = client.post(
@@ -306,6 +313,7 @@ def test_statement_out_anunciada_stores_values():
 
 # --- Integration: extract() populates *_anunciada from legal block ---
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_extract_populates_anunciada_from_legal_block():
     """extract() must always parse legal block into *_anunciada fields independently of P1."""
     pdf_bytes = PDF_PATH.read_bytes()
@@ -319,6 +327,7 @@ def test_extract_populates_anunciada_from_legal_block():
     assert result.statement.cftea_con_iva is not None
 
 
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_extract_actual_and_anunciada_are_independent():
     """P1 actual fields and legal announced fields must be parsed independently — no fallback conflation."""
     pdf_bytes = PDF_PATH.read_bytes()
