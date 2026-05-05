@@ -1,0 +1,67 @@
+name: PR Validation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, labeled, unlabeled]
+
+permissions:
+  pull-requests: read
+  issues: read
+
+jobs:
+  check-issue-reference:
+    name: Check Issue Reference
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR body links an issue
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if ! echo "$PR_BODY" | grep -qiE '(closes|fixes|resolves) #[0-9]+'; then
+            echo "::error::PR body must contain 'Closes #N', 'Fixes #N', or 'Resolves #N'."
+            exit 1
+          fi
+
+  check-issue-approved:
+    name: Check Issue Has status:approved
+    runs-on: ubuntu-latest
+    needs: check-issue-reference
+    steps:
+      - name: Extract issue number and verify status:approved
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          REPO: ${{ github.repository }}
+        run: |
+          ISSUE_NUMBER=$(echo "$PR_BODY" | grep -ioE '(closes|fixes|resolves) #([0-9]+)' | grep -oE '[0-9]+' | head -1)
+          echo "Linked issue: #$ISSUE_NUMBER"
+
+          LABELS=$(gh api "repos/$REPO/issues/$ISSUE_NUMBER/labels" --jq '.[].name')
+          echo "Issue labels: $LABELS"
+
+          if ! echo "$LABELS" | grep -qx "status:approved"; then
+            echo "::error::Issue #$ISSUE_NUMBER must have the 'status:approved' label before a PR can be opened."
+            exit 1
+          fi
+
+  check-type-label:
+    name: Check PR Has type:* Label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify exactly one type:* label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          TYPE_LABELS=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '[.labels[].name | select(startswith("type:"))] | length')
+          echo "type:* labels found: $TYPE_LABELS"
+
+          if [ "$TYPE_LABELS" -eq 0 ]; then
+            echo "::error::PR must have exactly one 'type:*' label (e.g. type:bug, type:feature)."
+            exit 1
+          fi
+          if [ "$TYPE_LABELS" -gt 1 ]; then
+            echo "::error::PR must have exactly ONE 'type:*' label. Found $TYPE_LABELS."
+            exit 1
+          fi
