@@ -323,13 +323,19 @@ def _parse_legal_tasas(legal_text: str) -> dict[str, float | None]:
 
 
 
-def is_uala_pdf(pdf_bytes: bytes) -> bool:
+def is_uala_pdf(pdf_bytes: bytes) -> tuple[bool, str]:
     try:
         reader = pypdf.PdfReader(BytesIO(pdf_bytes))
+        if not reader.pages:
+            return False, "PDF has no pages"
         first_page = reader.pages[0].extract_text() or ""
-        return UALA_IDENTIFIER in first_page or WILOBANK_IDENTIFIER in first_page
-    except Exception:
-        return False
+        if UALA_IDENTIFIER in first_page or WILOBANK_IDENTIFIER in first_page:
+            return True, ""
+        # Return a snippet of the first page to debug what text it actually saw
+        snippet = first_page[:100].replace("\n", " ")
+        return False, f"Missing Ualá identifier. Found text snippet: '{snippet}'"
+    except Exception as e:
+        return False, f"pypdf Exception: {str(e)}"
 
 
 def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractResponse:

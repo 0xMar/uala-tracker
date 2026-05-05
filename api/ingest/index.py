@@ -83,8 +83,10 @@ async def ingest_statement(
     if len(pdf_bytes) > MAX_PDF_SIZE:
         raise HTTPException(status_code=400, detail="File exceeds 5MB limit")
 
-    if not is_uala_pdf(pdf_bytes):
-        raise HTTPException(status_code=422, detail="Not a Ualá statement")
+    is_valid, reason = is_uala_pdf(pdf_bytes)
+    if not is_valid:
+        logger.error("PDF validation failed: %s", reason)
+        raise HTTPException(status_code=422, detail=f"Not a Ualá statement. Reason: {reason}")
 
     data = extract(pdf_bytes, filename=file.filename or "statement.pdf")
     s = data.statement
@@ -115,12 +117,12 @@ async def ingest_statement(
             "tem_anunciada": s.tem_anunciada,
             "cftea_con_iva_anunciada": s.cftea_con_iva_anunciada,
             "cftna_con_iva_anunciada": s.cftna_con_iva_anunciada,
-            "close_date": s.close_date,
-            "due_date": s.due_date,
-            "next_close_date": s.next_close_date,
-            "next_due_date": s.next_due_date,
-            "period_from": s.period_from,
-            "period_to": s.period_to,
+            "close_date": s.close_date.isoformat() if s.close_date else None,
+            "due_date": s.due_date.isoformat() if s.due_date else None,
+            "next_close_date": s.next_close_date.isoformat() if s.next_close_date else None,
+            "next_due_date": s.next_due_date.isoformat() if s.next_due_date else None,
+            "period_from": s.period_from.isoformat() if s.period_from else None,
+            "period_to": s.period_to.isoformat() if s.period_to else None,
         }
 
         resp = await client.post(
@@ -145,7 +147,7 @@ async def ingest_statement(
                 {
                     "user_id": user_id,
                     "statement_id": statement_id,
-                    "transaction_date": t.transaction_date,
+                    "transaction_date": t.transaction_date.isoformat() if t.transaction_date else None,
                     "merchant": t.merchant,
                     "amount_ars": t.amount_ars,
                     "installment_current": t.installment_current,

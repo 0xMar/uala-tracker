@@ -26,22 +26,23 @@ Este documento explica cómo configurar Make para cargar automáticamente los re
 1. En Make, creá un nuevo escenario
 2. Nombre: "Ualá - Ingesta automática de resúmenes"
 
-### Paso 2: Gmail Watch Emails
+### Paso 2: Gmail - Watch Emails
 
 1. Agregá el módulo **Gmail → Watch Emails**
 2. Conectá tu cuenta de Gmail
 3. Configuración:
    - **Folder**: `INBOX`
-   - **Criteria**: `Subject`
-   - **Search term**: `Resumen tarjeta de crédito`
+   - **Filter type**: `Gmail filter`
+   - **Query**: `subject:"Resumen tarjeta de crédito" has:attachment`
    - **Maximum number of results**: `1`
 
-### Paso 3: Gmail - Get Attachment
+### Paso 3: Flow Control - Iterator
 
-1. Agregá el módulo **Gmail → Get an Attachment**
+Dado que un email puede tener múltiples adjuntos, Make requiere iterarlos para extraer la data binaria.
+
+1. Agregá el módulo **Tools → Iterator** (Flow Control)
 2. Configuración:
-   - **Message ID**: `{{1.id}}` (del paso 1)
-   - **Attachment ID**: `{{1.attachments[].id}}` (primer adjunto)
+   - **Array**: `{{1.attachments[]}}` (mapealo desde el paso de Gmail)
 
 ### Paso 4: HTTP - Ingestar PDF
 
@@ -53,9 +54,10 @@ Este documento explica cómo configurar Make para cargar automáticamente los re
      - `X-API-Key`: `uala_tu_api_key_aqui` (pegá tu API key generada en el Paso 0)
    - **Body type**: `Multipart/form-data`
    - **Fields**:
-     - **Name**: `file`
-     - **File name**: `{{2.fileName}}`
-     - **Data**: `{{2.data}}`
+     - **Key**: `file`
+     - **Type**: `File`
+     - **File name**: `{{2.fileName}}` (viene del Iterator)
+     - **Data**: `{{2.data}}` (viene del Iterator)
 
 ### Paso 5: Notificación (opcional)
 
