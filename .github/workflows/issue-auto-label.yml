@@ -1,0 +1,21 @@
+name: Issue Auto Label
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    name: Add status:needs-review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply status:needs-review to new issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue edit "$ISSUE_NUMBER" --repo "$REPO" --add-label "status:needs-review"
