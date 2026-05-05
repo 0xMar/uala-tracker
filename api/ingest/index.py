@@ -104,11 +104,25 @@ async def ingest_statement(
     }
 
     async with httpx.AsyncClient(base_url=SUPABASE_URL) as client:
+        # Check if statement already exists to preserve user state
+        existing_resp = await client.get(
+            "/rest/v1/statements",
+            params={"user_id": f"eq.{user_id}", "period": f"eq.{s.period}", "select": "id,is_paid,version"},
+            headers=headers,
+        )
+        if existing_resp.status_code != 200:
+            logger.error("Failed to query existing statement for user %s: %s", user_id, existing_resp.text)
+            raise HTTPException(status_code=502, detail="Failed to query existing statement")
+        existing = existing_resp.json() or []
+        is_paid = bool(existing[0].get("is_paid") or False) if existing else False
+        version = ((existing[0].get("version") or 0) + 1) if existing else 1
+
         # Upsert statement (insert or replace by user_id + period)
         stmt_payload = {
             "user_id": user_id,
             "period": s.period,
-            "is_paid": False,
+            "is_paid": is_paid,
+            "version": version,
             "total_debt_ars": s.total_debt_ars,
             "minimum_payment": s.minimum_payment,
             "previous_balance": s.previous_balance,

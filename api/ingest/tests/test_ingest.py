@@ -30,6 +30,30 @@ TEST_API_KEY = "uala_test_key_1234567890abcdef"
 TEST_KEY_HASH = hmac.new(os.environ["API_KEY_HMAC_SECRET"].encode(), TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
 
 
+def _make_get_side_effect(existing_statement=None):
+    """
+    Returns a side_effect for client.get that routes by URL:
+    - /rest/v1/api_keys   → API key validation response
+    - /rest/v1/statements → existing statement lookup (empty by default)
+    """
+    api_key_resp = MagicMock()
+    api_key_resp.status_code = 200
+    api_key_resp.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
+
+    stmt_resp = MagicMock()
+    stmt_resp.status_code = 200
+    stmt_resp.json.return_value = [existing_statement] if existing_statement else []
+
+    async def side_effect(url, **kwargs):
+        if "api_keys" in url:
+            return api_key_resp
+        if "statements" in url:
+            return stmt_resp
+        raise AssertionError(f"Unexpected GET to: {url}")
+
+    return side_effect
+
+
 # --- Auth ---
 
 def test_missing_api_key_header():
@@ -142,15 +166,9 @@ def test_rejects_non_uala_pdf():
 @pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_ingest_success_with_real_pdf():
     """Full happy path: valid API key + real Ualá PDF → 201 with statement_id and period."""
-    # Mock API key validation
-    mock_response_get = MagicMock()
-    mock_response_get.status_code = 200
-    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
-
     mock_response_patch = MagicMock()
     mock_response_patch.status_code = 200
 
-    # Mock Supabase statement/transaction inserts
     mock_response_stmt = MagicMock()
     mock_response_stmt.status_code = 201
     mock_response_stmt.json.return_value = [{"id": "stmt-uuid-1234"}]
@@ -162,7 +180,7 @@ def test_ingest_success_with_real_pdf():
     mock_response_txns.status_code = 201
 
     mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect())
     mock_client.patch = AsyncMock(return_value=mock_response_patch)
     mock_client.post = AsyncMock(side_effect=[mock_response_stmt, mock_response_txns])
     mock_client.delete = AsyncMock(return_value=mock_response_delete)
@@ -188,11 +206,6 @@ def test_ingest_passes_user_id_to_supabase():
     """user_id extracted from API key must be forwarded to Supabase INSERT."""
     captured = {}
 
-    # Mock API key validation
-    mock_response_get = MagicMock()
-    mock_response_get.status_code = 200
-    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
-
     mock_response_patch = MagicMock()
     mock_response_patch.status_code = 200
 
@@ -212,7 +225,7 @@ def test_ingest_passes_user_id_to_supabase():
         return mock_response_stmt if "statements" in url else mock_response_txns
 
     mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect())
     mock_client.patch = AsyncMock(return_value=mock_response_patch)
     mock_client.post = AsyncMock(side_effect=capture_post)
     mock_client.delete = AsyncMock(return_value=mock_response_delete)
@@ -232,11 +245,6 @@ def test_ingest_passes_user_id_to_supabase():
 @pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_ingest_returns_502_on_supabase_error():
     """If Supabase returns an error, the endpoint must return 502."""
-    # Mock API key validation
-    mock_response_get = MagicMock()
-    mock_response_get.status_code = 200
-    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
-
     mock_response_patch = MagicMock()
     mock_response_patch.status_code = 200
 
@@ -245,7 +253,7 @@ def test_ingest_returns_502_on_supabase_error():
     mock_response_stmt.text = "Internal Server Error"
 
     mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect())
     mock_client.patch = AsyncMock(return_value=mock_response_patch)
     mock_client.post = AsyncMock(return_value=mock_response_stmt)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -266,10 +274,6 @@ def test_ingest_returns_502_on_supabase_error():
 @pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_last_used_at_receives_iso_timestamp():
     """PATCH to update last_used_at must send an ISO-8601 UTC timestamp, not 'now()'."""
-    mock_response_get = MagicMock()
-    mock_response_get.status_code = 200
-    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
-
     mock_response_patch = MagicMock()
     mock_response_patch.status_code = 200
 
@@ -284,7 +288,7 @@ def test_last_used_at_receives_iso_timestamp():
     mock_response_txns.status_code = 201
 
     mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect())
     mock_client.patch = AsyncMock(return_value=mock_response_patch)
     mock_client.post = AsyncMock(side_effect=[mock_response_stmt, mock_response_txns])
     mock_client.delete = AsyncMock(return_value=mock_response_delete)
@@ -315,10 +319,6 @@ def test_last_used_at_receives_iso_timestamp():
 @pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_patch_failure_logs_warning_but_succeeds():
     """If PATCH to update last_used_at fails, log a warning but still return 201."""
-    mock_response_get = MagicMock()
-    mock_response_get.status_code = 200
-    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
-
     mock_response_patch = MagicMock()
     mock_response_patch.status_code = 500
     mock_response_patch.text = "Internal Server Error"
@@ -334,7 +334,7 @@ def test_patch_failure_logs_warning_but_succeeds():
     mock_response_txns.status_code = 201
 
     mock_client = AsyncMock()
-    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect())
     mock_client.patch = AsyncMock(return_value=mock_response_patch)
     mock_client.post = AsyncMock(side_effect=[mock_response_stmt, mock_response_txns])
     mock_client.delete = AsyncMock(return_value=mock_response_delete)
@@ -389,3 +389,131 @@ def test_api_key_uses_hmac_not_plain_sha256():
     get_call_kwargs = mock_client.get.call_args[1]
     params = get_call_kwargs.get("params", {})
     assert f"eq.{hmac_sha256}" in params.get("key_hash", ""), "GET query must use HMAC-SHA-256 hash"
+
+
+# --- Duplicate ingestion: preserve is_paid and increment version ---
+
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
+def test_ingest_preserves_is_paid_on_duplicate():
+    """Re-ingesting an existing statement must preserve is_paid=True from the existing record."""
+    captured = {}
+
+    mock_response_patch = MagicMock()
+    mock_response_patch.status_code = 200
+
+    mock_response_stmt = MagicMock()
+    mock_response_stmt.status_code = 201
+    mock_response_stmt.json.return_value = [{"id": "stmt-uuid-1234"}]
+
+    mock_response_delete = MagicMock()
+    mock_response_delete.status_code = 200
+
+    mock_response_txns = MagicMock()
+    mock_response_txns.status_code = 201
+
+    async def capture_post(url, json=None, headers=None):
+        if "statements" in url:
+            captured["is_paid"] = json.get("is_paid")
+            captured["version"] = json.get("version")
+        return mock_response_stmt if "statements" in url else mock_response_txns
+
+    existing = {"id": "stmt-uuid-1234", "is_paid": True, "version": 1}
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect(existing_statement=existing))
+    mock_client.patch = AsyncMock(return_value=mock_response_patch)
+    mock_client.post = AsyncMock(side_effect=capture_post)
+    mock_client.delete = AsyncMock(return_value=mock_response_delete)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("api.ingest.index.httpx.AsyncClient", return_value=mock_client):
+        response = client.post(
+            "/api/ingest",
+            headers={"X-API-Key": TEST_API_KEY},
+            files={"file": ("statement.pdf", PDF_PATH.read_bytes(), "application/pdf")},
+        )
+
+    assert response.status_code == 201
+    assert captured["is_paid"] is True, "is_paid must be preserved from existing record"
+    assert captured["version"] == 2, "version must be incremented from 1 to 2"
+
+
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
+def test_ingest_uses_defaults_for_new_statement():
+    """First-time ingestion must use is_paid=False and version=1."""
+    captured = {}
+
+    mock_response_patch = MagicMock()
+    mock_response_patch.status_code = 200
+
+    mock_response_stmt = MagicMock()
+    mock_response_stmt.status_code = 201
+    mock_response_stmt.json.return_value = [{"id": "stmt-uuid-new"}]
+
+    mock_response_delete = MagicMock()
+    mock_response_delete.status_code = 200
+
+    mock_response_txns = MagicMock()
+    mock_response_txns.status_code = 201
+
+    async def capture_post(url, json=None, headers=None):
+        if "statements" in url:
+            captured["is_paid"] = json.get("is_paid")
+            captured["version"] = json.get("version")
+        return mock_response_stmt if "statements" in url else mock_response_txns
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(side_effect=_make_get_side_effect())  # no existing statement
+    mock_client.patch = AsyncMock(return_value=mock_response_patch)
+    mock_client.post = AsyncMock(side_effect=capture_post)
+    mock_client.delete = AsyncMock(return_value=mock_response_delete)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("api.ingest.index.httpx.AsyncClient", return_value=mock_client):
+        response = client.post(
+            "/api/ingest",
+            headers={"X-API-Key": TEST_API_KEY},
+            files={"file": ("statement.pdf", PDF_PATH.read_bytes(), "application/pdf")},
+        )
+
+    assert response.status_code == 201
+    assert captured["is_paid"] is False, "is_paid must default to False for new statement"
+    assert captured["version"] == 1, "version must default to 1 for new statement"
+
+
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
+def test_ingest_returns_502_when_existing_statement_query_fails():
+    """If the pre-upsert SELECT fails, return 502 instead of silently resetting user state."""
+    api_key_resp = MagicMock()
+    api_key_resp.status_code = 200
+    api_key_resp.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
+
+    stmt_query_resp = MagicMock()
+    stmt_query_resp.status_code = 500
+    stmt_query_resp.text = "Internal Server Error"
+
+    mock_response_patch = MagicMock()
+    mock_response_patch.status_code = 200
+
+    async def get_side_effect(url, **kwargs):
+        if "api_keys" in url:
+            return api_key_resp
+        return stmt_query_resp
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(side_effect=get_side_effect)
+    mock_client.patch = AsyncMock(return_value=mock_response_patch)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("api.ingest.index.httpx.AsyncClient", return_value=mock_client):
+        response = client.post(
+            "/api/ingest",
+            headers={"X-API-Key": TEST_API_KEY},
+            files={"file": ("statement.pdf", PDF_PATH.read_bytes(), "application/pdf")},
+        )
+
+    assert response.status_code == 502
+    assert "query existing statement" in response.json()["detail"]
