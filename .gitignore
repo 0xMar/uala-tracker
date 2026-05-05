@@ -37,3 +37,7 @@ data/
 
 # Session files
 session-*.md
+
+# Audit reports (internal use only)
+*-audit.json
+docs/SECURITY_AUDIT_REPORT.md
