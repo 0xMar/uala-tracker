@@ -1,9 +1,11 @@
+import hashlib
+import hmac
+import logging
 import os
+from datetime import datetime, timezone
 
 import httpx
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
-from jose import JWTError, jwt
-from jose.backends import RSAKey  # noqa: F401 — needed by python-jose for RS256
 
 from api.extract.process import extract, is_uala_pdf
 
@@ -13,39 +15,62 @@ MAX_PDF_SIZE = 5 * 1024 * 1024  # 5MB
 
 SUPABASE_URL = os.environ["NEXT_PUBLIC_SUPABASE_URL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SECRET_KEY"]
-JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+API_KEY_HMAC_SECRET = os.environ["API_KEY_HMAC_SECRET"]
 
-_jwks_cache: dict | None = None
-
-
-async def _get_jwks() -> dict:
-    global _jwks_cache
-    if _jwks_cache is None:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(JWKS_URL)
-            resp.raise_for_status()
-            _jwks_cache = resp.json()
-    return _jwks_cache
+logger = logging.getLogger(__name__)
 
 
-async def _get_user_id(authorization: str) -> str:
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid authorization header")
-    token = authorization.removeprefix("Bearer ")
-    try:
-        jwks = await _get_jwks()
-        payload = jwt.decode(token, jwks, algorithms=["RS256", "ES256", "HS256"], audience="authenticated")
-        return payload["sub"]
-    except JWTError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid token: {e}")
+async def _validate_api_key(api_key: str) -> str:
+    """Validate API key and return user_id."""
+    if not api_key.startswith("uala_"):
+        raise HTTPException(status_code=401, detail="Invalid API key format")
+
+    # Hash the key to compare with stored hash
+    key_hash = hmac.new(
+        API_KEY_HMAC_SECRET.encode(), api_key.encode(), hashlib.sha256
+    ).hexdigest()
+
+    # Query Supabase to find the key
+    headers = {
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+    }
+
+    async with httpx.AsyncClient(base_url=SUPABASE_URL) as client:
+        resp = await client.get(
+            f"/rest/v1/api_keys?key_hash=eq.{key_hash}&revoked_at=is.null&select=user_id,id",
+            headers=headers,
+        )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Invalid API key")
+
+        keys = resp.json()
+        if not keys:
+            raise HTTPException(status_code=401, detail="Invalid or revoked API key")
+
+        # Update last_used_at
+        key_id = keys[0]["id"]
+        patch_resp = await client.patch(
+            f"/rest/v1/api_keys?id=eq.{key_id}",
+            json={"last_used_at": datetime.now(timezone.utc).isoformat()},
+            headers=headers,
+        )
+        if patch_resp.status_code not in (200, 204):
+            logger.warning(
+                "Failed to update last_used_at for key %s: %s",
+                key_id,
+                patch_resp.text,
+            )
+
+        return keys[0]["user_id"]
 
 
 @app.post("/api/ingest", status_code=201)
 async def ingest_statement(
     file: UploadFile = File(...),
-    authorization: str = Header(...),
+    x_api_key: str = Header(..., alias="X-API-Key"),
 ) -> dict:
-    user_id = await _get_user_id(authorization)
+    user_id = await _validate_api_key(x_api_key)
 
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
