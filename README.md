@@ -57,10 +57,22 @@ openssl rand -base64 32
 
 ### 4. Install Python dependencies
 
-The PDF extraction runs as a Vercel Python Function. Install its dependencies:
+The project uses [uv](https://docs.astral.sh/uv/) for Python dependency management. Install it if you don't have it:
 
 ```bash
-pip install -r api/extract/requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Then install the dependencies (creates a `.venv` automatically):
+
+```bash
+uv sync --dev
+```
+
+To run the Python tests:
+
+```bash
+uv run pytest
 ```
 
 ### 5. Run locally
