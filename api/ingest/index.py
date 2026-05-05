@@ -136,7 +136,8 @@ async def ingest_statement(
             headers={**headers, "Prefer": "resolution=merge-duplicates,return=representation"},
         )
         if resp.status_code not in (200, 201):
-            raise HTTPException(status_code=502, detail=f"Failed to save statement: {resp.text}")
+            logger.error("Failed to save statement for user %s: %s", user_id, resp.text)
+            raise HTTPException(status_code=502, detail="Failed to save statement")
 
         statement_id = resp.json()[0]["id"]
 
@@ -164,6 +165,7 @@ async def ingest_statement(
             ]
             resp = await client.post("/rest/v1/transactions", json=txns, headers=headers)
             if resp.status_code not in (200, 201):
-                raise HTTPException(status_code=502, detail=f"Failed to save transactions: {resp.text}")
+                logger.error("Failed to save transactions for user %s: %s", user_id, resp.text)
+                raise HTTPException(status_code=502, detail="Failed to save transactions")
 
     return {"statement_id": statement_id, "period": s.period, "transactions": len(data.transactions)}
