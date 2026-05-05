@@ -83,8 +83,10 @@ async def ingest_statement(
     if len(pdf_bytes) > MAX_PDF_SIZE:
         raise HTTPException(status_code=400, detail="File exceeds 5MB limit")
 
-    if not is_uala_pdf(pdf_bytes):
-        raise HTTPException(status_code=422, detail="Not a Ualá statement")
+    is_valid, reason = is_uala_pdf(pdf_bytes)
+    if not is_valid:
+        logger.error("PDF validation failed: %s", reason)
+        raise HTTPException(status_code=422, detail=f"Not a Ualá statement. Reason: {reason}")
 
     data = extract(pdf_bytes, filename=file.filename or "statement.pdf")
     s = data.statement
