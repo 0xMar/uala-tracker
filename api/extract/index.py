@@ -35,7 +35,8 @@ async def extract_statement(
     if len(pdf_bytes) > MAX_PDF_SIZE:
         raise HTTPException(status_code=400, detail="File exceeds 5MB limit")
 
-    if not is_uala_pdf(pdf_bytes):
+    is_valid, _ = is_uala_pdf(pdf_bytes)
+    if not is_valid:
         raise HTTPException(
             status_code=422,
             detail="Not a Ualá statement — 'Ualá Bank S.A.U.' not found on page 1",
