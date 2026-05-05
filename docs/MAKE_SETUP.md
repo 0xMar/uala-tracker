@@ -36,28 +36,31 @@ Este documento explica cómo configurar Make para cargar automáticamente los re
    - **Query**: `subject:"Resumen tarjeta de crédito" has:attachment`
    - **Maximum number of results**: `1`
 
-### Paso 3: Flow Control - Iterator
+### Paso 3: Gmail - List email attachments and media
 
-Dado que un email puede tener múltiples adjuntos, Make requiere iterarlos para extraer la data binaria.
+Dado que un email puede tener múltiples adjuntos, usamos el iterador propio de Gmail.
 
-1. Agregá el módulo **Tools → Iterator** (Flow Control)
+1. Agregá el módulo **Gmail → List email attachments and media** (puede aparecer como "Iterate attachments")
 2. Configuración:
-   - **Array**: `{{1.attachments[]}}` (mapealo desde el paso de Gmail)
+   - Suele mapear automáticamente el `Message ID` del Paso 2.
 
-### Paso 4: HTTP - Ingestar PDF
+### Paso 4: HTTP - Make a request
 
-1. Agregá el módulo **HTTP → Make a Request**
+1. Agregá el módulo **HTTP → Make a request**
 2. Configuración:
    - **URL**: `https://tu-app.vercel.app/api/ingest` (reemplazá con tu URL de Vercel)
    - **Method**: `POST`
-   - **Headers**:
-     - `X-API-Key`: `uala_tu_api_key_aqui` (pegá tu API key generada en el Paso 0)
+   - **Authentication**: `API Key`
+   - Configuración de la API Key:
+     - **Key**: `uala_tu_api_key_aqui` (pegá tu API key)
+     - **API Key placement**: `In the header`
+     - **API Key parameter name**: `X-API-Key`
    - **Body type**: `Multipart/form-data`
    - **Fields**:
-     - **Key**: `file`
+     - **Name**: `file`
      - **Type**: `File`
-     - **File name**: `{{2.fileName}}` (viene del Iterator)
-     - **Data**: `{{2.data}}` (viene del Iterator)
+     - **File name**: `{{3.fileName}}` (viene del Paso 3)
+     - **Data**: `{{3.data}}` (viene del Paso 3)
 
 ### Paso 5: Notificación (opcional)
 
