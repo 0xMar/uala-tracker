@@ -38,7 +38,8 @@ async def _validate_api_key(api_key: str) -> str:
 
     async with httpx.AsyncClient(base_url=SUPABASE_URL) as client:
         resp = await client.get(
-            f"/rest/v1/api_keys?key_hash=eq.{key_hash}&revoked_at=is.null&select=user_id,id",
+            "/rest/v1/api_keys",
+            params={"key_hash": f"eq.{key_hash}", "revoked_at": "is.null", "select": "user_id,id"},
             headers=headers,
         )
         if resp.status_code != 200:
@@ -69,11 +70,15 @@ async def _validate_api_key(api_key: str) -> str:
 async def ingest_statement(
     file: UploadFile = File(...),
     x_api_key: str = Header(..., alias="X-API-Key"),
+    content_length: int | None = Header(None),
 ) -> dict:
     user_id = await _validate_api_key(x_api_key)
 
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
+
+    if content_length is not None and content_length > MAX_PDF_SIZE:
+        raise HTTPException(status_code=400, detail="File exceeds 5MB limit")
 
     pdf_bytes = await file.read()
 
@@ -85,8 +90,8 @@ async def ingest_statement(
 
     is_valid, reason = is_uala_pdf(pdf_bytes)
     if not is_valid:
-        logger.error("PDF validation failed: %s", reason)
-        raise HTTPException(status_code=422, detail=f"Not a Ualá statement. Reason: {reason}")
+        logger.warning("PDF validation failed for user %s: %s", user_id, reason)
+        raise HTTPException(status_code=422, detail="Not a Ualá statement")
 
     data = extract(pdf_bytes, filename=file.filename or "statement.pdf")
     s = data.statement
