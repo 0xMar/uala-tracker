@@ -1,0 +1,27 @@
+name: Python Tests
+
+on:
+  pull_request:
+    paths:
+      - 'api/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync --dev
+
+      - run: uv run pytest api/ -v
+        env:
+          EXTRACT_API_SECRET: test-secret
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SECRET_KEY: placeholder
+          API_KEY_HMAC_SECRET: placeholder-hmac-secret-32-chars-xx
