@@ -1,5 +1,8 @@
 import hashlib
+import hmac
+import logging
 import os
+from datetime import datetime, timezone
 
 import httpx
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
@@ -12,6 +15,9 @@ MAX_PDF_SIZE = 5 * 1024 * 1024  # 5MB
 
 SUPABASE_URL = os.environ["NEXT_PUBLIC_SUPABASE_URL"]
 SUPABASE_SERVICE_ROLE_KEY = os.environ["SUPABASE_SECRET_KEY"]
+API_KEY_HMAC_SECRET = os.environ["API_KEY_HMAC_SECRET"]
+
+logger = logging.getLogger(__name__)
 
 
 async def _validate_api_key(api_key: str) -> str:
@@ -20,7 +26,9 @@ async def _validate_api_key(api_key: str) -> str:
         raise HTTPException(status_code=401, detail="Invalid API key format")
 
     # Hash the key to compare with stored hash
-    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+    key_hash = hmac.new(
+        API_KEY_HMAC_SECRET.encode(), api_key.encode(), hashlib.sha256
+    ).hexdigest()
 
     # Query Supabase to find the key
     headers = {
@@ -42,11 +50,17 @@ async def _validate_api_key(api_key: str) -> str:
 
         # Update last_used_at
         key_id = keys[0]["id"]
-        await client.patch(
+        patch_resp = await client.patch(
             f"/rest/v1/api_keys?id=eq.{key_id}",
-            json={"last_used_at": "now()"},
+            json={"last_used_at": datetime.now(timezone.utc).isoformat()},
             headers=headers,
         )
+        if patch_resp.status_code not in (200, 204):
+            logger.warning(
+                "Failed to update last_used_at for key %s: %s",
+                key_id,
+                patch_resp.text,
+            )
 
         return keys[0]["user_id"]
 

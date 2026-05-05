@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
+import logging
 import sys
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 import os
 os.environ.setdefault("NEXT_PUBLIC_SUPABASE_URL", "https://test.supabase.co")
 os.environ.setdefault("SUPABASE_SECRET_KEY", "test-service-role-key")
+os.environ.setdefault("API_KEY_HMAC_SECRET", "test-hmac-secret")
 
 from api.ingest.index import app
 
@@ -24,7 +27,7 @@ PDF_PATH = Path("data/raw/ResumenDeCuentaTarjetaDeCredito_202603.pdf")
 
 TEST_USER_ID = "00000000-0000-0000-0000-000000000001"
 TEST_API_KEY = "uala_test_key_1234567890abcdef"
-TEST_KEY_HASH = hashlib.sha256(TEST_API_KEY.encode()).hexdigest()
+TEST_KEY_HASH = hmac.new(b"test-hmac-secret", TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
 
 
 # --- Auth ---
@@ -256,3 +259,131 @@ def test_ingest_returns_502_on_supabase_error():
         )
 
     assert response.status_code == 502
+
+
+# --- HMAC and timestamp validation ---
+
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
+def test_last_used_at_receives_iso_timestamp():
+    """PATCH to update last_used_at must send an ISO-8601 UTC timestamp, not 'now()'."""
+    mock_response_get = MagicMock()
+    mock_response_get.status_code = 200
+    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
+
+    mock_response_patch = MagicMock()
+    mock_response_patch.status_code = 200
+
+    mock_response_stmt = MagicMock()
+    mock_response_stmt.status_code = 201
+    mock_response_stmt.json.return_value = [{"id": "stmt-uuid-1234"}]
+
+    mock_response_delete = MagicMock()
+    mock_response_delete.status_code = 200
+
+    mock_response_txns = MagicMock()
+    mock_response_txns.status_code = 201
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.patch = AsyncMock(return_value=mock_response_patch)
+    mock_client.post = AsyncMock(side_effect=[mock_response_stmt, mock_response_txns])
+    mock_client.delete = AsyncMock(return_value=mock_response_delete)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("api.ingest.index.httpx.AsyncClient", return_value=mock_client):
+        client.post(
+            "/api/ingest",
+            headers={"X-API-Key": TEST_API_KEY},
+            files={"file": ("statement.pdf", PDF_PATH.read_bytes(), "application/pdf")},
+        )
+
+    # Verify PATCH was called
+    mock_client.patch.assert_called_once()
+    patch_call_kwargs = mock_client.patch.call_args
+    patch_json = patch_call_kwargs.kwargs.get("json") or patch_call_kwargs[1].get("json")
+    timestamp = patch_json["last_used_at"]
+
+    # Must NOT be the string "now()"
+    assert timestamp != "now()", "last_used_at should be an ISO timestamp, not 'now()'"
+    # Must be a valid ISO-8601 timestamp
+    from datetime import datetime
+    parsed = datetime.fromisoformat(timestamp)
+    assert parsed.tzinfo is not None, "Timestamp must include timezone info (UTC)"
+
+
+@pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
+def test_patch_failure_logs_warning_but_succeeds():
+    """If PATCH to update last_used_at fails, log a warning but still return 201."""
+    mock_response_get = MagicMock()
+    mock_response_get.status_code = 200
+    mock_response_get.json.return_value = [{"user_id": TEST_USER_ID, "id": "key-id-123"}]
+
+    mock_response_patch = MagicMock()
+    mock_response_patch.status_code = 500
+    mock_response_patch.text = "Internal Server Error"
+
+    mock_response_stmt = MagicMock()
+    mock_response_stmt.status_code = 201
+    mock_response_stmt.json.return_value = [{"id": "stmt-uuid-1234"}]
+
+    mock_response_delete = MagicMock()
+    mock_response_delete.status_code = 200
+
+    mock_response_txns = MagicMock()
+    mock_response_txns.status_code = 201
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=mock_response_get)
+    mock_client.patch = AsyncMock(return_value=mock_response_patch)
+    mock_client.post = AsyncMock(side_effect=[mock_response_stmt, mock_response_txns])
+    mock_client.delete = AsyncMock(return_value=mock_response_delete)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("api.ingest.index.httpx.AsyncClient", return_value=mock_client):
+        with patch("api.ingest.index.logger") as mock_logger:
+            response = client.post(
+                "/api/ingest",
+                headers={"X-API-Key": TEST_API_KEY},
+                files={"file": ("statement.pdf", PDF_PATH.read_bytes(), "application/pdf")},
+            )
+
+    # Ingest should still succeed despite PATCH failure
+    assert response.status_code == 201
+    # Warning must have been logged
+    mock_logger.warning.assert_called_once()
+    warning_args = mock_logger.warning.call_args[0]
+    assert "key-id-123" in str(warning_args)
+
+
+def test_api_key_uses_hmac_not_plain_sha256():
+    """API key validation must use HMAC-SHA-256, not plain SHA-256."""
+    # A plain SHA-256 hash of TEST_API_KEY would be different from HMAC hash
+    plain_sha256 = hashlib.sha256(TEST_API_KEY.encode()).hexdigest()
+    hmac_sha256 = hmac.new(b"test-hmac-secret", TEST_API_KEY.encode(), hashlib.sha256).hexdigest()
+
+    # They must be different (proving HMAC adds the secret)
+    assert plain_sha256 != hmac_sha256
+
+    # The mock returns keys when queried with HMAC hash
+    # If code used plain SHA-256, the query would not match and return 401
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = []  # No match = wrong hash used
+
+    mock_client = AsyncMock()
+    mock_client.get = AsyncMock(return_value=mock_response)
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("api.ingest.index.httpx.AsyncClient", return_value=mock_client):
+        response = client.post(
+            "/api/ingest",
+            headers={"X-API-Key": TEST_API_KEY},
+            files={"file": ("x.pdf", b"%PDF-fake", "application/pdf")},
+        )
+
+    # Verify the GET was called with HMAC hash in the URL
+    get_call_args = mock_client.get.call_args[0][0]
+    assert hmac_sha256 in get_call_args, "GET query must use HMAC-SHA-256 hash"

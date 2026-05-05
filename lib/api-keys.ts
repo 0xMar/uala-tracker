@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { randomBytes, createHash } from 'crypto'
+import { randomBytes, createHmac } from 'crypto'
 
 export type ApiKey = {
   id: string
@@ -23,16 +23,43 @@ function generateApiKey(): string {
   return `uala_${randomPart}`
 }
 
+const MAX_KEY_NAME_LENGTH = 100
+const MAX_ACTIVE_KEYS = 10
+
 function hashApiKey(key: string): string {
-  return createHash('sha256').update(key).digest('hex')
+  const secret = process.env.API_KEY_HMAC_SECRET
+  if (!secret) throw new Error('API_KEY_HMAC_SECRET environment variable is required')
+  return createHmac('sha256', secret).update(key).digest('hex')
 }
 
 export async function createApiKey(name: string): Promise<CreateApiKeyResult> {
+  const sanitizedName = name.trim()
+  if (!sanitizedName || sanitizedName.length > MAX_KEY_NAME_LENGTH) {
+    return {
+      success: false,
+      error: `El nombre debe tener entre 1 y ${MAX_KEY_NAME_LENGTH} caracteres`,
+    }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return { success: false, error: 'Not authenticated' }
+  }
+
+  // Check max active keys
+  const { count } = await supabase
+    .from('api_keys')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .is('revoked_at', null)
+
+  if (count !== null && count >= MAX_ACTIVE_KEYS) {
+    return {
+      success: false,
+      error: `Máximo ${MAX_ACTIVE_KEYS} keys activas permitidas`,
+    }
   }
 
   const key = generateApiKey()
@@ -43,7 +70,7 @@ export async function createApiKey(name: string): Promise<CreateApiKeyResult> {
     .from('api_keys')
     .insert({
       user_id: user.id,
-      name,
+      name: sanitizedName,
       key_hash: keyHash,
       key_prefix: keyPrefix,
     })
