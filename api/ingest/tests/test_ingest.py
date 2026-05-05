@@ -384,6 +384,7 @@ def test_api_key_uses_hmac_not_plain_sha256():
             files={"file": ("x.pdf", b"%PDF-fake", "application/pdf")},
         )
 
-    # Verify the GET was called with HMAC hash in the URL
-    get_call_args = mock_client.get.call_args[0][0]
-    assert hmac_sha256 in get_call_args, "GET query must use HMAC-SHA-256 hash"
+    # Verify the GET was called with HMAC hash in the params
+    get_call_kwargs = mock_client.get.call_args[1]
+    params = get_call_kwargs.get("params", {})
+    assert f"eq.{hmac_sha256}" in params.get("key_hash", ""), "GET query must use HMAC-SHA-256 hash"

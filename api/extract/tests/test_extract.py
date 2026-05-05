@@ -28,19 +28,22 @@ API_HEADERS = {"X-API-Key": TEST_API_KEY}
 
 def test_is_uala_pdf_true():
     assert PDF_PATH.exists(), "Put a Ualá PDF in data/raw/ to run integration tests"
-    assert is_uala_pdf(PDF_PATH.read_bytes()) is True
+    valid, _ = is_uala_pdf(PDF_PATH.read_bytes())
+    assert valid is True
 
 
 def test_is_uala_pdf_wilobank():
     """PDFs from before the rebrand say 'Wilobank S.A.U.' — must also be accepted."""
     wilobank_pdf = Path("data/raw/ResumenDeCuentaTarjetaDeCredito_202409.pdf")
     if wilobank_pdf.exists():
-        assert is_uala_pdf(wilobank_pdf.read_bytes()) is True
+        valid, _ = is_uala_pdf(wilobank_pdf.read_bytes())
+        assert valid is True
 
 
 def test_is_uala_pdf_false():
     fake_pdf = b"%PDF-1.4 fake content without the identifier"
-    assert is_uala_pdf(fake_pdf) is False
+    valid, _ = is_uala_pdf(fake_pdf)
+    assert valid is False
 
 
 # --- Unit: extract ---
