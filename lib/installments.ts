@@ -44,9 +44,10 @@ export function groupInstallments(transactions: Transaction[]): InstallmentGroup
   }>()
 
   for (const txn of installmentTxns) {
-    // Group by merchant + installments_total only — tolerant to minor amount
-    // variations across statements (rounding differences between periods)
-    const key = `${txn.merchant}-${txn.installments_total}`
+    // Group by merchant, installments_total, transaction_date, and coupon_number
+    // to uniquely identify distinct installment plans.
+    // amount_ars is intentionally excluded to tolerate minor rounding variations across statements.
+    const key = `${txn.merchant}-${txn.installments_total}-${txn.transaction_date}-${txn.coupon_number || ''}`
     
     const existing = groups.get(key)
     const current = txn.installment_current ?? 1
