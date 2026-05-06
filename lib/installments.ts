@@ -44,9 +44,9 @@ export function groupInstallments(transactions: Transaction[]): InstallmentGroup
   }>()
 
   for (const txn of installmentTxns) {
-    // Group by merchant, installments_total, and coupon_number to identify unique plans.
-    // transaction_date and id are excluded because they vary across different installment rows of the same plan.
-    const key = `${txn.merchant}-${txn.installments_total}-${txn.coupon_number?.trim() || ''}`
+    // Group by merchant, installments_total, and coupon_number.
+    // The coupon_number is the primary identifier to distinguish between different plans at the same merchant.
+    const key = `${txn.merchant}-${txn.installments_total}-${txn.coupon_number?.trim() || 'NO_COUPON'}`
     
     const existing = groups.get(key)
     const current = txn.installment_current ?? 1
