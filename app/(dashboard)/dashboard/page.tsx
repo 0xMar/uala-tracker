@@ -5,7 +5,15 @@ import { PeriodBreakdown } from '@/components/dashboard/period-breakdown'
 import { MonthlyEvolution } from '@/components/dashboard/monthly-evolution'
 import { TransactionsTable } from '@/components/dashboard/transactions-table'
 import { StatementsList } from '@/components/dashboard/statements-list'
+import { groupInstallments } from '@/lib/installments'
 
+/**
+ * DashboardPage component that fetches and displays the main user dashboard.
+ * It loads all necessary statement and transaction data server-side, 
+ * including calculating the total debt from active installments to show accurate available credit.
+ * 
+ * @returns The rendered dashboard page.
+ */
 export default async function DashboardPage() {
   // Fetch all data server-side in parallel
   const [statements, latestStatement, allTransactions] = await Promise.all([
@@ -22,6 +30,10 @@ export default async function DashboardPage() {
     ? await getTransactionsByStatementId(latestStatement.id)
     : []
 
+  // Calculate active installments remaining debt
+  const installments = groupInstallments(allTransactions)
+  const activeInstallmentsDebt = installments.reduce((acc, item) => acc + item.totalRemaining, 0)
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="space-y-1">
@@ -36,6 +48,7 @@ export default async function DashboardPage() {
         <SummaryCard 
           currentStatement={latestStatement} 
           previousStatement={previousStatement} 
+          activeInstallmentsDebt={activeInstallmentsDebt}
         />
         <ActiveInstallments transactions={allTransactions} />
       </div>
