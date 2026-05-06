@@ -11,10 +11,23 @@ export interface InstallmentGroup {
   remainingMonths: string[]
 }
 
+/**
+ * Formats a Date object into a localized string representing the month and year (e.g. "ene 26").
+ * 
+ * @param date - The Date object to format.
+ * @returns A localized string representing the month and year.
+ */
 function formatMonth(date: Date): string {
   return date.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' })
 }
 
+/**
+ * Groups and processes a list of transactions to extract active installment plans.
+ * Calculates the current progress, total remaining debt, and projected future months for each plan.
+ * 
+ * @param transactions - Array of transactions, potentially containing installment purchases.
+ * @returns An array of active installment groups sorted by the highest remaining debt.
+ */
 export function groupInstallments(transactions: Transaction[]): InstallmentGroup[] {
   // Filter only transactions with installments > 1
   const installmentTxns = transactions.filter(

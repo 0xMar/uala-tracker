@@ -10,6 +10,12 @@ interface ActiveInstallmentsProps {
 
 import { groupInstallments } from '@/lib/installments'
 
+/**
+ * Renders a list of the user's active installment plans, showing progress and remaining debt.
+ * 
+ * @param props - Component properties containing the list of transactions.
+ * @returns The rendered ActiveInstallments card.
+ */
 export function ActiveInstallments({ transactions }: ActiveInstallmentsProps) {
   const installments = groupInstallments(transactions)
 

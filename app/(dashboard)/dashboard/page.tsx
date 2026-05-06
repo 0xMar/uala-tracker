@@ -7,6 +7,13 @@ import { TransactionsTable } from '@/components/dashboard/transactions-table'
 import { StatementsList } from '@/components/dashboard/statements-list'
 import { groupInstallments } from '@/lib/installments'
 
+/**
+ * DashboardPage component that fetches and displays the main user dashboard.
+ * It loads all necessary statement and transaction data server-side, 
+ * including calculating the total debt from active installments to show accurate available credit.
+ * 
+ * @returns The rendered dashboard page.
+ */
 export default async function DashboardPage() {
   // Fetch all data server-side in parallel
   const [statements, latestStatement, allTransactions] = await Promise.all([

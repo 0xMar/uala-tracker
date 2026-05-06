@@ -11,6 +11,12 @@ interface SummaryCardProps {
   activeInstallmentsDebt?: number
 }
 
+/**
+ * Renders a badge indicating whether the current statement's rates (Tasas) match the previous one.
+ * 
+ * @param props - Component properties containing the Tasas status.
+ * @returns The rendered badge component.
+ */
 function TasasStatusBadge({ status }: { status: TasasStatus }) {
   if (status === 'Coincide') {
     return (
@@ -33,6 +39,13 @@ function TasasStatusBadge({ status }: { status: TasasStatus }) {
   )
 }
 
+/**
+ * Calculates the absolute value and percentage difference between the current and previous values.
+ * 
+ * @param current - The current numeric value.
+ * @param previous - The previous numeric value to compare against.
+ * @returns An object containing the difference value and percentage, or null if either value is null/zero.
+ */
 function calculateDelta(current: number | null, previous: number | null): { value: number; percentage: number } | null {
   if (current === null || previous === null || previous === 0) return null
   const value = current - previous
@@ -40,6 +53,14 @@ function calculateDelta(current: number | null, previous: number | null): { valu
   return { value, percentage }
 }
 
+/**
+ * SummaryCard component displaying the core financials of the most recent statement.
+ * Calculates and shows the real available credit by subtracting both the statement debt 
+ * and the active installments future debt from the credit limit.
+ * 
+ * @param props - Component properties containing statement data and the active installments debt.
+ * @returns The rendered SummaryCard.
+ */
 export function SummaryCard({ currentStatement, previousStatement, activeInstallmentsDebt = 0 }: SummaryCardProps) {
   if (!currentStatement) {
     return (
