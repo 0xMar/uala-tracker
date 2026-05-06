@@ -95,7 +95,7 @@ You can automate statement ingestion (e.g. from Gmail via Make.com or n8n) using
 1. Generate an API Key in **Settings → API Keys**.
 2. Send a `POST` request to `/api/ingest` with the PDF as `multipart/form-data` and the key in the `X-API-Key` header.
 
-See [`docs/MAKE_SETUP.md`](docs/MAKE_SETUP.md) for a step-by-step Make.com integration guide.
+See [`docs/MAKE_SETUP.md`](docs/MAKE_SETUP.md) for a step-by-step Make.com integration guide, or [`docs/N8N_SETUP.md`](docs/N8N_SETUP.md) for n8n.
 
 ## PDF processing
 
