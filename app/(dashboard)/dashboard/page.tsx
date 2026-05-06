@@ -5,6 +5,7 @@ import { PeriodBreakdown } from '@/components/dashboard/period-breakdown'
 import { MonthlyEvolution } from '@/components/dashboard/monthly-evolution'
 import { TransactionsTable } from '@/components/dashboard/transactions-table'
 import { StatementsList } from '@/components/dashboard/statements-list'
+import { groupInstallments } from '@/lib/installments'
 
 export default async function DashboardPage() {
   // Fetch all data server-side in parallel
@@ -22,6 +23,10 @@ export default async function DashboardPage() {
     ? await getTransactionsByStatementId(latestStatement.id)
     : []
 
+  // Calculate active installments remaining debt
+  const installments = groupInstallments(allTransactions)
+  const activeInstallmentsDebt = installments.reduce((acc, item) => acc + item.totalRemaining, 0)
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="space-y-1">
@@ -36,6 +41,7 @@ export default async function DashboardPage() {
         <SummaryCard 
           currentStatement={latestStatement} 
           previousStatement={previousStatement} 
+          activeInstallmentsDebt={activeInstallmentsDebt}
         />
         <ActiveInstallments transactions={allTransactions} />
       </div>

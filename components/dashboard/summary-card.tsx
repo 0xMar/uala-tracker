@@ -8,6 +8,7 @@ import type { Statement } from '@/lib/types'
 interface SummaryCardProps {
   currentStatement: Statement | null
   previousStatement: Statement | null
+  activeInstallmentsDebt?: number
 }
 
 function TasasStatusBadge({ status }: { status: TasasStatus }) {
@@ -39,7 +40,7 @@ function calculateDelta(current: number | null, previous: number | null): { valu
   return { value, percentage }
 }
 
-export function SummaryCard({ currentStatement, previousStatement }: SummaryCardProps) {
+export function SummaryCard({ currentStatement, previousStatement, activeInstallmentsDebt = 0 }: SummaryCardProps) {
   if (!currentStatement) {
     return (
       <Card>
@@ -115,7 +116,7 @@ export function SummaryCard({ currentStatement, previousStatement }: SummaryCard
             <p className="text-sm text-muted-foreground">Crédito disponible</p>
             <p className="text-base font-medium">
               {currentStatement.credit_limit !== null && currentStatement.total_debt_ars !== null
-                ? formatCurrency(currentStatement.credit_limit - currentStatement.total_debt_ars)
+                ? formatCurrency(currentStatement.credit_limit - currentStatement.total_debt_ars - activeInstallmentsDebt)
                 : '-'}
             </p>
           </div>
