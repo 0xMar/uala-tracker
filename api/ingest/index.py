@@ -144,11 +144,19 @@ async def ingest_statement(
             "period_to": s.period_to.isoformat() if s.period_to else None,
         }
 
-        resp = await client.post(
-            "/rest/v1/statements",
-            json=stmt_payload,
-            headers={**headers, "Prefer": "resolution=merge-duplicates,return=representation"},
-        )
+        if existing:
+            statement_id = existing[0]["id"]
+            resp = await client.patch(
+                f"/rest/v1/statements?id=eq.{statement_id}",
+                json=stmt_payload,
+                headers={**headers, "Prefer": "return=representation"},
+            )
+        else:
+            resp = await client.post(
+                "/rest/v1/statements",
+                json=stmt_payload,
+                headers={**headers, "Prefer": "return=representation"},
+            )
         if resp.status_code not in (200, 201):
             logger.error("Failed to save statement for user %s: %s", user_id, resp.text)
             raise HTTPException(status_code=502, detail="Failed to save statement")

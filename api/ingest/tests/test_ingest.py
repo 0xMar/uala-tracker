@@ -395,14 +395,11 @@ def test_api_key_uses_hmac_not_plain_sha256():
 
 @pytest.mark.skipif(not PDF_PATH.exists(), reason="No PDF fixture available")
 def test_ingest_preserves_is_paid_on_duplicate():
-    """Re-ingesting an existing statement must preserve is_paid=True from the existing record."""
+    """Re-ingesting an existing statement must preserve is_paid=True and increment version via PATCH."""
     captured = {}
 
-    mock_response_patch = MagicMock()
-    mock_response_patch.status_code = 200
-
     mock_response_stmt = MagicMock()
-    mock_response_stmt.status_code = 201
+    mock_response_stmt.status_code = 200
     mock_response_stmt.json.return_value = [{"id": "stmt-uuid-1234"}]
 
     mock_response_delete = MagicMock()
@@ -411,18 +408,18 @@ def test_ingest_preserves_is_paid_on_duplicate():
     mock_response_txns = MagicMock()
     mock_response_txns.status_code = 201
 
-    async def capture_post(url, json=None, headers=None):
+    async def capture_patch(url, json=None, headers=None):
         if "statements" in url:
             captured["is_paid"] = json.get("is_paid")
             captured["version"] = json.get("version")
-        return mock_response_stmt if "statements" in url else mock_response_txns
+        return mock_response_stmt
 
     existing = {"id": "stmt-uuid-1234", "is_paid": True, "version": 1}
 
     mock_client = AsyncMock()
     mock_client.get = AsyncMock(side_effect=_make_get_side_effect(existing_statement=existing))
-    mock_client.patch = AsyncMock(return_value=mock_response_patch)
-    mock_client.post = AsyncMock(side_effect=capture_post)
+    mock_client.patch = AsyncMock(side_effect=capture_patch)
+    mock_client.post = AsyncMock(return_value=mock_response_txns)
     mock_client.delete = AsyncMock(return_value=mock_response_delete)
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
