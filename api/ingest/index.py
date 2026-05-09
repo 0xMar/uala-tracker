@@ -71,6 +71,12 @@ async def ingest_statement(
     file: UploadFile = File(...),
     x_api_key: str = Header(..., alias="X-API-Key"),
 ) -> dict:
+    """Validate an API key, parse a Ualá PDF, and persist the data to Supabase.
+
+    Used by automation workflows (Make.com, n8n). Upserts the statement and
+    replaces transactions for the same period. Returns statement_id, period,
+    and transaction count on success.
+    """
     user_id = await _validate_api_key(x_api_key)
 
     if file.content_type != "application/pdf":

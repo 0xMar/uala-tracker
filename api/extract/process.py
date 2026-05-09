@@ -69,10 +69,12 @@ class ExtractResponse(BaseModel):
 # --- Helpers ---
 
 def _normalize(text: str | None) -> str:
+    """Collapse whitespace and strip leading/trailing spaces from text."""
     return re.sub(r"\s+", " ", text or "").strip()
 
 
 def _parse_amount(text: str | None) -> float:
+    """Parse an Argentine peso amount string (e.g. '1.234,56' or '$1.234,56') to float."""
     if not text:
         return 0.0
     cleaned = text.replace("$", "").replace("USD", "").replace(" ", "").strip()
@@ -114,18 +116,22 @@ def _parse_short_date(text: str | None, year: int) -> date | None:
 
 
 def _is_amount_line(line: str) -> bool:
+    """Return True if the line is a standalone amount value (e.g. '1.234,56')."""
     return re.fullmatch(r"-?[\d\.]+,\d{2}", line or "") is not None
 
 
 def _is_coupon_line(line: str) -> bool:
+    """Return True if the line is a coupon reference code (e.g. 'R12345')."""
     return re.fullmatch(r"R\d{4,}", line or "") is not None
 
 
 def _is_code_line(line: str) -> bool:
+    """Return True if the line is a short numeric code (1–4 digits) used as a section marker."""
     return re.fullmatch(r"\d{1,4}", line or "") is not None
 
 
 def _movement_type(description: str) -> str:
+    """Classify a transaction description as 'PAGO', 'IMPUESTO', or 'CONSUMO'."""
     desc = (description or "").upper()
     if "PAGO CON SALDO EN CUENTA" in desc:
         return "PAGO"
@@ -135,6 +141,12 @@ def _movement_type(description: str) -> str:
 
 
 def _block_description(lines: list[str], section_type: str) -> str:
+    """Build a clean merchant description from a raw transaction block.
+
+    Strips amounts, coupon codes, installment markers, and noise tokens,
+    returning up to 2 meaningful text fragments joined as a single string.
+    Returns 'S/D' if no usable text is found.
+    """
     parts = []
     for line in lines:
         t = _normalize(line)
@@ -159,6 +171,10 @@ def _block_description(lines: list[str], section_type: str) -> str:
 
 
 def _detect_sections(lines: list[str]) -> dict[str, int]:
+    """Scan PDF text lines and return the start index of each movement section.
+
+    Keys: 'CONSUMO', 'PAGO', 'IMPUESTO', 'FIN'.
+    """
     idx: dict[str, int] = {}
     for i, raw in enumerate(lines):
         t = _normalize(raw)
@@ -176,6 +192,11 @@ def _detect_sections(lines: list[str]) -> dict[str, int]:
 def _extract_section(
     lines: list[str], start: int, end: int, section_type: str
 ) -> list[dict[str, Any]]:
+    """Parse raw movement lines between start and end into a list of transaction dicts.
+
+    Each dict contains: fecha, merchant, amount, installment_current,
+    installments_total, coupon_number, type.
+    """
     patron_fecha = re.compile(r"^\d{2} [A-ZÁÉÍÓÚ]{3,5} \d{2}$")
     movements = []
     i = start
@@ -207,6 +228,7 @@ def _extract_section(
 
 
 def _extract_movement_text(reader: pypdf.PdfReader) -> str:
+    """Concatenate text from all non-legal pages of the PDF."""
     texts = []
     for page in reader.pages:
         raw = page.extract_text() or ""
@@ -220,6 +242,7 @@ def _extract_movement_text(reader: pypdf.PdfReader) -> str:
 
 
 def _extract_statement_totals(text: str) -> dict[str, float | None]:
+    """Extract section totals (CONSUMO, PAGO, IMPUESTO) from the full PDF text for reconciliation."""
     consumos = re.search(r"Consumos.*?Total\s*\$?\s*([\d\.]+,\d{2})", text, re.S)
     pagos = re.search(r"Pagos.*?Total\s*-?\s*\$?\s*([\d\.]+,\d{2})", text, re.S)
     impuestos = re.search(r"Impuestos.*?Total\s*(-?)\s*\$?\s*([\d\.]+,\d{2})", text, re.S)
@@ -246,6 +269,7 @@ def _parse_percentage(text: str) -> float | None:
 
 
 def _empty_tasas() -> dict[str, float | None]:
+    """Return a tasas dict with all values set to None (used as a safe default)."""
     return {"tna": None, "tea": None, "tem": None, "cftea_con_iva": None, "cftna_con_iva": None}
 
 
@@ -324,6 +348,11 @@ def _parse_legal_tasas(legal_text: str) -> dict[str, float | None]:
 
 
 def is_uala_pdf(pdf_bytes: bytes) -> tuple[bool, str]:
+    """Check whether the PDF is a Ualá (or Wilobank) credit card statement.
+
+    Returns a (valid, reason) tuple. reason is empty on success, or a
+    diagnostic message on failure.
+    """
     try:
         reader = pypdf.PdfReader(BytesIO(pdf_bytes))
         if not reader.pages:
@@ -339,6 +368,7 @@ def is_uala_pdf(pdf_bytes: bytes) -> tuple[bool, str]:
 
 
 def extract(pdf_bytes: bytes, filename: str = "statement.pdf") -> ExtractResponse:
+    """Parse a Ualá PDF statement and return structured statement, transactions, and reconciliation data."""
     reader = pypdf.PdfReader(BytesIO(pdf_bytes))
     if len(reader.pages) < 2:
         raise ValueError("PDF must have at least 2 pages")
