@@ -78,9 +78,11 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
       <CardContent className="space-y-4">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Input
-            placeholder="Buscar comercio..."
+            placeholder="Buscar comercio…"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
+            name="search"
+            autoComplete="off"
             className="max-w-xs"
           />
           <Select value={typeFilter} onValueChange={handleTypeChange}>

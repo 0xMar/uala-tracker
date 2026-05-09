@@ -86,6 +86,8 @@ export default function SignUpPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={loading}
+                autoComplete="email"
+                spellCheck={false}
                 className="border-border focus-visible:border-ring"
               />
             </div>
@@ -102,6 +104,7 @@ export default function SignUpPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={loading}
+                autoComplete="new-password"
                 className="border-border focus-visible:border-ring"
               />
             </div>
@@ -118,12 +121,13 @@ export default function SignUpPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 disabled={loading}
+                autoComplete="new-password"
                 className="border-border focus-visible:border-ring"
               />
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : 'Sign Up'}
+              {loading ? 'Creating account…' : 'Sign Up'}
             </Button>
           </form>
 
