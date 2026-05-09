@@ -56,7 +56,11 @@ function StatementItem({ statement }: StatementItemProps) {
             checked={optimisticPaid}
             onCheckedChange={handleToggle}
             disabled={isPending}
-            aria-label={`Resumen ${statement.period}`}
+            aria-label={
+              optimisticPaid
+                ? `Marcar resumen ${statement.period} como pendiente`
+                : `Marcar resumen ${statement.period} como pagado`
+            }
           />
         </div>
       </div>
