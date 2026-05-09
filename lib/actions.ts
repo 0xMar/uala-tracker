@@ -21,6 +21,7 @@ export async function toggleStatementPaid(statementId: string, isPaid: boolean) 
     .from('statements')
     .update({ is_paid: isPaid })
     .eq('id', statementId)
+    .eq('user_id', user.id)
 
   if (error) {
     throw new Error('Failed to update statement')
