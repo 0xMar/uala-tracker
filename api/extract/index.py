@@ -19,10 +19,10 @@ async def extract_statement(
     file: UploadFile = File(...),
     x_api_key: str = Header(..., alias="X-API-Key"),
 ) -> ExtractResponse:
-    """Validate and parse a Ualá PDF statement, returning structured JSON.
+    """Validate and parse a Ualá (or legacy Wilobank) PDF statement, returning structured JSON.
 
     Requires a valid X-API-Key matching EXTRACT_API_SECRET.
-    Accepts only PDF files up to 5MB that are valid Ualá statements.
+    Accepts only PDF files up to 5MB that are valid Ualá or Wilobank statements.
     """
     secret = os.environ.get("EXTRACT_API_SECRET") or EXTRACT_API_SECRET
     if not secret or x_api_key != secret:

@@ -126,7 +126,7 @@ def _is_coupon_line(line: str) -> bool:
 
 
 def _is_code_line(line: str) -> bool:
-    """Return True if the line is a short numeric code (1–4 digits) used as a section marker."""
+    """Return True if the line is a short numeric code (1-4 digits) used as a section marker."""
     return re.fullmatch(r"\d{1,4}", line or "") is not None
 
 
@@ -143,8 +143,8 @@ def _movement_type(description: str) -> str:
 def _block_description(lines: list[str], section_type: str) -> str:
     """Build a clean merchant description from a raw transaction block.
 
-    Strips amounts, coupon codes, installment markers, and noise tokens,
-    returning up to 2 meaningful text fragments joined as a single string.
+    Strips amounts, coupon codes, installment markers, and noise tokens.
+    Returns up to 2 text fragments for CONSUMO sections, up to 3 for others.
     Returns 'S/D' if no usable text is found.
     """
     parts = []
