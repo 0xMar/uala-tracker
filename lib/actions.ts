@@ -17,17 +17,23 @@ export async function toggleStatementPaid(statementId: string, isPaid: boolean) 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('statements')
     .update({ is_paid: isPaid })
     .eq('id', statementId)
     .eq('user_id', user.id)
+    .select('id')
 
   if (error) {
     throw new Error('Failed to update statement')
   }
 
+  if (!data || data.length === 0) {
+    throw new Error('Statement not found or access denied')
+  }
+
   revalidatePath('/dashboard')
+  revalidatePath('/statements')
 }
 
 export type UploadResult = {
