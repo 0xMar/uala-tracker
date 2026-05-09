@@ -144,9 +144,11 @@ export function ApiKeysManager() {
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+              name="key-name"
+              autoComplete="off"
             />
             <Button onClick={handleCreate} disabled={isCreating}>
-              {isCreating ? 'Creando...' : 'Crear'}
+              {isCreating ? 'Creando…' : 'Crear'}
             </Button>
           </div>
         </CardContent>

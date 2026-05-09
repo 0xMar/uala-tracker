@@ -252,7 +252,7 @@ export function PdfUpload() {
                       {entry.status === 'uploading' && (
                         <span className="flex items-center gap-1.5 text-foreground">
                           <Spinner className="h-3 w-3" />
-                          Subiendo
+                          Subiendo…
                         </span>
                       )}
                       {entry.status === 'success' && (
@@ -274,7 +274,7 @@ export function PdfUpload() {
             {isUploading && files.length > 1 && (
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Procesando archivos...</span>
+                  <span>Procesando archivos…</span>
                   <span>{successCount} / {files.length} listos</span>
                 </div>
                 <Progress value={progressPercent} className="h-1.5" />
@@ -298,7 +298,7 @@ export function PdfUpload() {
               {isUploading ? (
                 <>
                   <Spinner className="mr-2 h-4 w-4" />
-                  {files.length > 1 ? `Subiendo ${currentFileIndex !== null ? currentFileIndex + 1 : ''}/${files.length}...` : 'Subiendo...'}
+                  {files.length > 1 ? `Subiendo ${currentFileIndex !== null ? currentFileIndex + 1 : ''}/${files.length}…` : 'Subiendo…'}
                 </>
               ) : files.length > 1 ? (
                 `Subir ${files.length} resúmenes`
