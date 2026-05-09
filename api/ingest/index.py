@@ -70,15 +70,11 @@ async def _validate_api_key(api_key: str) -> str:
 async def ingest_statement(
     file: UploadFile = File(...),
     x_api_key: str = Header(..., alias="X-API-Key"),
-    content_length: int | None = Header(None),
 ) -> dict:
     user_id = await _validate_api_key(x_api_key)
 
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Only PDF files are accepted")
-
-    if content_length is not None and content_length > MAX_PDF_SIZE:
-        raise HTTPException(status_code=400, detail="File exceeds 5MB limit")
 
     pdf_bytes = await file.read()
 
