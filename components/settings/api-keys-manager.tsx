@@ -112,6 +112,7 @@ export function ApiKeysManager() {
                 size="sm"
                 variant="outline"
                 onClick={() => copyToClipboard(generatedKey)}
+                aria-label="Copiar API key"
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -194,6 +195,7 @@ export function ApiKeysManager() {
                       size="sm"
                       variant="ghost"
                       onClick={() => openRevokeDialog(key.id, key.name)}
+                      aria-label={`Revocar API key ${key.name}`}
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />
