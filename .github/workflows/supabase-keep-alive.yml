@@ -2,20 +2,32 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    # Every 2 days at 12:00 UTC
-    - cron: "0 12 */2 * *"
-  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+    # Daily at 12:00 UTC — keeps free tier project alive
+    - cron: "0 12 * * *"
+  workflow_dispatch: # Allows manual triggering from GitHub
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase database
+        env:
+          SUPABASE_URL: https://aklthqtwwsqrtvtcnrnc.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: |
-          curl -s -o /dev/null -w "%{http_code}" \
-            "https://aklthqtwwsqrtvtcnrnc.supabase.co/rest/v1/statements" \
-            -H "apikey: ${{ secrets.SUPABASE_SECRET_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SECRET_KEY }}" \
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$SUPABASE_URL/rest/v1/statements" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"query": "SELECT 1"}' \
-            || echo "Request completed (may return 4xx, still counts as activity)"
+            -d '{"query": "SELECT 1"}')
+
+          echo "Supabase responded with HTTP $HTTP_CODE"
+
+          # Treat 2xx/3xx as success
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+            echo "Keep-alive ping succeeded"
+          else
+            echo "Keep-alive ping failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
