@@ -1,0 +1,36 @@
+name: Supabase Keep Alive
+
+on:
+  schedule:
+    # Daily at 12:00 UTC — keeps free tier project alive
+    - cron: "0 12 * * *"
+  workflow_dispatch: # Allows manual triggering from GitHub
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase database
+        env:
+          SUPABASE_URL: https://aklthqtwwsqrtvtcnrnc.supabase.co
+          SUPABASE_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            --connect-timeout 10 \
+            --max-time 30 \
+            --retry 3 \
+            --retry-delay 5 \
+            --retry-connrefused \
+            "$SUPABASE_URL/rest/v1/statements?select=id&limit=1" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY")
+
+          echo "Supabase responded with HTTP $HTTP_CODE"
+
+          # Treat 2xx/3xx as success
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+            echo "Keep-alive ping succeeded"
+          else
+            echo "Keep-alive ping failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
