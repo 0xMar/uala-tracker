@@ -6,6 +6,8 @@ on:
     - cron: "0 12 * * *"
   workflow_dispatch: # Allows manual triggering from GitHub
 
+permissions: {}
+
 jobs:
   ping:
     runs-on: ubuntu-latest
@@ -15,6 +17,14 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
         run: |
+          APIKEY_HEADER_FILE=$(mktemp)
+          AUTH_HEADER_FILE=$(mktemp)
+          chmod 600 "$APIKEY_HEADER_FILE" "$AUTH_HEADER_FILE"
+          trap 'rm -f "$APIKEY_HEADER_FILE" "$AUTH_HEADER_FILE"' EXIT
+
+          printf 'apikey: %s\n' "$SUPABASE_KEY" > "$APIKEY_HEADER_FILE"
+          printf 'Authorization: Bearer %s\n' "$SUPABASE_KEY" > "$AUTH_HEADER_FILE"
+
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             --connect-timeout 10 \
             --max-time 30 \
@@ -22,8 +32,8 @@ jobs:
             --retry-delay 5 \
             --retry-connrefused \
             "$SUPABASE_URL/rest/v1/statements?select=id&limit=1" \
-            -H "apikey: $SUPABASE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_KEY")
+            -H @"$APIKEY_HEADER_FILE" \
+            -H @"$AUTH_HEADER_FILE")
 
           echo "Supabase responded with HTTP $HTTP_CODE"
 
