@@ -109,3 +109,10 @@ Files are processed in memory and never persisted.
 ## Demo
 
 A read-only demo with mock data is available at [v0-uala-tracker-frontend.vercel.app/demo](https://v0-uala-tracker-frontend.vercel.app/demo).
+
+## Security Notes
+
+- **Rate Limiting**: Not implemented due to Vercel Hobby plan limitations. Consider upgrading to Pro plan or implementing application-level rate limiting if needed.
+- **Secrets Management**: Supabase URL is now stored in GitHub Secrets for the keep-alive workflow.
+- **Row Level Security**: All database tables use Supabase RLS for per-user data isolation.
+- **API Keys**: Hashed with HMAC-SHA256 before storage; service role key required for automation endpoints.
