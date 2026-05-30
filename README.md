@@ -112,7 +112,7 @@ A read-only demo with mock data is available at [v0-uala-tracker-frontend.vercel
 
 ## Security Notes
 
-- **Rate Limiting**: Not implemented due to Vercel Hobby plan limitations. Consider upgrading to Pro plan or implementing application-level rate limiting if needed.
+- **Rate Limiting**: Implemented via a combined Vercel Firewall rate limit rule. Protects `/api/extract` and `/api/ingest` under a single rule (limited to 30 requests/minute per IP) to fit within Vercel's Hobby plan limits.
 - **Secrets Management**: Supabase URL is now stored in GitHub Secrets for the keep-alive workflow.
 - **Row Level Security**: All database tables use Supabase RLS for per-user data isolation.
 - **API Keys**: Hashed with HMAC-SHA256 before storage; service role key required for automation endpoints.
