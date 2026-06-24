@@ -17,7 +17,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { uploadStatement, type UploadResult } from '@/lib/actions'
+import { uploadStatement } from '@/lib/actions'
+import type { UploadResult } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB

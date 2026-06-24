@@ -1,9 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getBaseUrl } from '@/lib/url'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { HttpExtractionGateway } from '@/lib/gateways/extraction-gateway'
+import { SupabaseStatementRepository } from '@/lib/repositories/statement-repository'
+import { SupabaseTransactionRepository } from '@/lib/repositories/transaction-repository'
+import { StatementService } from '@/lib/services/statement-service'
+import type { UploadResult } from '@/lib/types'
 
 export async function logout() {
   const supabase = await createClient()
@@ -17,76 +21,20 @@ export async function toggleStatementPaid(statementId: string, isPaid: boolean) 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
-    .from('statements')
-    .update({ is_paid: isPaid })
-    .eq('id', statementId)
-    .eq('user_id', user.id)
-    .select('id')
+  const stmtRepo = new SupabaseStatementRepository(supabase)
+  const txnRepo = new SupabaseTransactionRepository(supabase)
+  const gateway = new HttpExtractionGateway()
+  const service = new StatementService(gateway, stmtRepo, txnRepo)
 
-  if (error) {
-    throw new Error('Failed to update statement')
-  }
-
-  if (!data || data.length === 0) {
-    throw new Error('Statement not found or access denied')
-  }
+  await service.toggleStatementPaid(user.id, statementId, isPaid)
 
   revalidatePath('/dashboard')
   revalidatePath('/statements')
 }
 
-export type UploadResult = {
-  success: boolean
-  error?: string
-  duplicatePeriod?: string
-  statementId?: string
-}
-
-// Expected response structure from /api/extract
-interface ExtractedStatement {
-  period: string
-  total_debt_ars: number | null
-  minimum_payment: number | null
-  previous_balance: number | null
-  credit_limit: number | null
-  // Actual tasas
-  tna: number | null
-  tea: number | null
-  cftea_con_iva: number | null
-  cftna_con_iva: number | null
-  // Announced tasas
-  tna_anunciada: number | null
-  tea_anunciada: number | null
-  tem_anunciada: number | null
-  cftea_con_iva_anunciada: number | null
-  cftna_con_iva_anunciada: number | null
-  close_date: string | null
-  due_date: string | null
-  next_close_date: string | null
-  next_due_date: string | null
-  period_from: string | null
-  period_to: string | null
-}
-
-interface ExtractedTransaction {
-  transaction_date: string
-  merchant: string
-  amount_ars: number
-  installment_current: number | null
-  installments_total: number | null
-  coupon_number: string | null
-  type: 'CONSUMO' | 'PAGO' | 'IMPUESTO'
-}
-
-interface ExtractResponse {
-  statement: ExtractedStatement
-  transactions: ExtractedTransaction[]
-}
-
 export async function uploadStatement(
   formData: FormData,
-  forceReplace = false
+  forceReplace = false,
 ): Promise<UploadResult> {
   const supabase = await createClient()
 
@@ -116,181 +64,18 @@ export async function uploadStatement(
     return { success: false, error: 'Only PDF files are allowed' }
   }
 
-  try {
-    // Step 1: Forward the PDF to /api/extract for parsing
-    const extractFormData = new FormData()
-    extractFormData.append('file', file)
+  const gateway = new HttpExtractionGateway()
+  const stmtRepo = new SupabaseStatementRepository(supabase)
+  const txnRepo = new SupabaseTransactionRepository(supabase)
+  const service = new StatementService(gateway, stmtRepo, txnRepo)
 
-    const response = await fetch(`${getBaseUrl()}/api/extract`, {
-      method: 'POST',
-      headers: { 'X-API-Key': process.env.EXTRACT_API_SECRET ?? '' },
-      body: extractFormData,
-    })
+  const result = await service.uploadStatement(user.id, file, forceReplace)
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      return {
-        success: false,
-        error: errorData.error || `Extraction failed: ${response.statusText}`,
-      }
-    }
-
-    const extractedData: ExtractResponse = await response.json()
-    const { statement: extractedStatement, transactions: extractedTransactions } = extractedData
-
-    // Step 2: Check if statement for this period already exists
-    const { data: existingStatement } = await supabase
-      .from('statements')
-      .select('id, version')
-      .eq('user_id', user.id)
-      .eq('period', extractedStatement.period)
-      .single()
-
-    if (existingStatement && !forceReplace) {
-      // Duplicate period - need user confirmation
-      return {
-        success: false,
-        duplicatePeriod: extractedStatement.period,
-        error: 'A statement for this period already exists',
-      }
-    }
-
-    let statementId: string
-
-    if (existingStatement && forceReplace) {
-      // Step 3a: Replace existing statement - increment version and update
-      // First, delete old transactions for this statement
-      const { error: deleteTransactionsError } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('statement_id', existingStatement.id)
-
-      if (deleteTransactionsError) {
-        console.error('Failed to delete old transactions:', deleteTransactionsError)
-        return { success: false, error: 'Failed to replace existing statement' }
-      }
-
-      // Update the statement with new data and increment version
-      const { error: updateError } = await supabase
-        .from('statements')
-        .update({
-          version: existingStatement.version + 1,
-          total_debt_ars: extractedStatement.total_debt_ars,
-          minimum_payment: extractedStatement.minimum_payment,
-          previous_balance: extractedStatement.previous_balance,
-          credit_limit: extractedStatement.credit_limit,
-          tna: extractedStatement.tna,
-          tea: extractedStatement.tea,
-          cftea_con_iva: extractedStatement.cftea_con_iva,
-          cftna_con_iva: extractedStatement.cftna_con_iva,
-          tna_anunciada: extractedStatement.tna_anunciada,
-          tea_anunciada: extractedStatement.tea_anunciada,
-          tem_anunciada: extractedStatement.tem_anunciada,
-          cftea_con_iva_anunciada: extractedStatement.cftea_con_iva_anunciada,
-          cftna_con_iva_anunciada: extractedStatement.cftna_con_iva_anunciada,
-          close_date: extractedStatement.close_date,
-          due_date: extractedStatement.due_date,
-          next_close_date: extractedStatement.next_close_date,
-          next_due_date: extractedStatement.next_due_date,
-          period_from: extractedStatement.period_from,
-          period_to: extractedStatement.period_to,
-          // Reset is_paid when replacing
-          is_paid: false,
-        })
-        .eq('id', existingStatement.id)
-
-      if (updateError) {
-        console.error('Failed to update statement:', updateError)
-        return { success: false, error: 'Failed to update statement' }
-      }
-
-      statementId = existingStatement.id
-    } else {
-      // Step 3b: Insert new statement
-      const { data: newStatement, error: insertError } = await supabase
-        .from('statements')
-        .insert({
-          user_id: user.id,
-          period: extractedStatement.period,
-          version: 1,
-          is_paid: false,
-          total_debt_ars: extractedStatement.total_debt_ars,
-          minimum_payment: extractedStatement.minimum_payment,
-          previous_balance: extractedStatement.previous_balance,
-          credit_limit: extractedStatement.credit_limit,
-          tna: extractedStatement.tna,
-          tea: extractedStatement.tea,
-          cftea_con_iva: extractedStatement.cftea_con_iva,
-          cftna_con_iva: extractedStatement.cftna_con_iva,
-          tna_anunciada: extractedStatement.tna_anunciada,
-          tea_anunciada: extractedStatement.tea_anunciada,
-          tem_anunciada: extractedStatement.tem_anunciada,
-          cftea_con_iva_anunciada: extractedStatement.cftea_con_iva_anunciada,
-          cftna_con_iva_anunciada: extractedStatement.cftna_con_iva_anunciada,
-          close_date: extractedStatement.close_date,
-          due_date: extractedStatement.due_date,
-          next_close_date: extractedStatement.next_close_date,
-          next_due_date: extractedStatement.next_due_date,
-          period_from: extractedStatement.period_from,
-          period_to: extractedStatement.period_to,
-        })
-        .select('id')
-        .single()
-
-      if (insertError) {
-        // Check for unique constraint violation (race condition)
-        if (insertError.code === '23505') {
-          return {
-            success: false,
-            duplicatePeriod: extractedStatement.period,
-            error: 'A statement for this period already exists',
-          }
-        }
-        return {
-          success: false,
-          error: 'Failed to save statement',
-        }
-      }
-
-      statementId = newStatement.id
-    }
-
-    // Step 4: Insert all transactions
-    if (extractedTransactions.length > 0) {
-      const transactionsToInsert = extractedTransactions.map((txn) => ({
-        user_id: user.id,
-        statement_id: statementId,
-        transaction_date: txn.transaction_date,
-        merchant: txn.merchant,
-        amount_ars: txn.amount_ars,
-        installment_current: txn.installment_current,
-        installments_total: txn.installments_total,
-        coupon_number: txn.coupon_number,
-        type: txn.type,
-      }))
-
-      const { error: transactionsError } = await supabase
-        .from('transactions')
-        .insert(transactionsToInsert)
-
-      if (transactionsError) {
-        console.error('Failed to insert transactions:', transactionsError)
-        return { success: false, error: 'Failed to save transactions' }
-      }
-    }
-
+  if (result.success) {
     revalidatePath('/dashboard')
     revalidatePath('/statements')
     revalidatePath('/upload')
-
-    return {
-      success: true,
-      statementId,
-    }
-  } catch (error) {
-    console.error('Upload error:', error)
-    return { success: false, error: 'Failed to upload statement' }
   }
+
+  return result
 }
-
-
