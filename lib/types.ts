@@ -41,3 +41,56 @@ export interface Transaction {
   type: 'CONSUMO' | 'PAGO' | 'IMPUESTO';
   created_at: string;
 }
+
+// --- Extraction / Gateway types ---
+
+export interface ExtractedStatement {
+  period: string
+  total_debt_ars: number | null
+  minimum_payment: number | null
+  previous_balance: number | null
+  credit_limit: number | null
+  // Actual tasas
+  tna: number | null
+  tea: number | null
+  cftea_con_iva: number | null
+  cftna_con_iva: number | null
+  // Announced tasas
+  tna_anunciada: number | null
+  tea_anunciada: number | null
+  tem_anunciada: number | null
+  cftea_con_iva_anunciada: number | null
+  cftna_con_iva_anunciada: number | null
+  close_date: string | null
+  due_date: string | null
+  next_close_date: string | null
+  next_due_date: string | null
+  period_from: string | null
+  period_to: string | null
+}
+
+export interface ExtractedTransaction {
+  transaction_date: string
+  merchant: string
+  amount_ars: number
+  installment_current: number | null
+  installments_total: number | null
+  coupon_number: string | null
+  type: 'CONSUMO' | 'PAGO' | 'IMPUESTO'
+}
+
+export interface ExtractResponse {
+  statement: ExtractedStatement
+  transactions: ExtractedTransaction[]
+}
+
+export type UploadResult =
+  | {
+      success: true
+      statementId: string
+    }
+  | {
+      success: false
+      error: string
+      duplicatePeriod?: string
+    }
