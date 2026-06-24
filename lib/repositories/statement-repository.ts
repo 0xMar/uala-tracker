@@ -67,12 +67,14 @@ export class SupabaseStatementRepository implements IStatementRepository {
   constructor(private supabase: SupabaseClient) {}
 
   async findByPeriod(userId: string, period: string): Promise<ExistingStatement | null> {
-    const { data } = await this.supabase
+    const { data, error } = await this.supabase
       .from('statements')
       .select('id, version')
       .eq('user_id', userId)
       .eq('period', period)
       .single()
+
+    if (error && error.code !== 'PGRST116') throw error
     return data
   }
 

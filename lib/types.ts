@@ -84,9 +84,13 @@ export interface ExtractResponse {
   transactions: ExtractedTransaction[]
 }
 
-export type UploadResult = {
-  success: boolean
-  error?: string
-  duplicatePeriod?: string
-  statementId?: string
-}
+export type UploadResult =
+  | {
+      success: true
+      statementId: string
+    }
+  | {
+      success: false
+      error: string
+      duplicatePeriod?: string
+    }

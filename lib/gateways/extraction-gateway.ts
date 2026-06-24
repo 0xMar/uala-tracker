@@ -6,21 +6,31 @@ export interface IExtractionGateway {
 }
 
 export class HttpExtractionGateway implements IExtractionGateway {
+  private readonly TIMEOUT_MS = 30_000
+
   async extract(file: File): Promise<ExtractResponse> {
     const formData = new FormData()
     formData.append('file', file)
 
-    const response = await fetch(`${getBaseUrl()}/api/extract`, {
-      method: 'POST',
-      headers: { 'X-API-Key': process.env.EXTRACT_API_SECRET ?? '' },
-      body: formData,
-    })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), this.TIMEOUT_MS)
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || `Extraction failed: ${response.statusText}`)
+    try {
+      const response = await fetch(`${getBaseUrl()}/api/extract`, {
+        method: 'POST',
+        headers: { 'X-API-Key': process.env.EXTRACT_API_SECRET ?? '' },
+        body: formData,
+        signal: controller.signal,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Extraction failed: ${response.statusText}`)
+      }
+
+      return response.json()
+    } finally {
+      clearTimeout(timeout)
     }
-
-    return response.json()
   }
 }

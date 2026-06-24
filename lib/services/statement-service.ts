@@ -1,7 +1,7 @@
 import type { IExtractionGateway } from '@/lib/gateways/extraction-gateway'
 import type { IStatementRepository } from '@/lib/repositories/statement-repository'
 import type { ITransactionRepository } from '@/lib/repositories/transaction-repository'
-import type { ExtractResponse, UploadResult } from '@/lib/types'
+import type { ExtractedStatement, ExtractResponse, UploadResult } from '@/lib/types'
 
 export class StatementService {
   constructor(
@@ -9,6 +9,31 @@ export class StatementService {
     private stmtRepo: IStatementRepository,
     private txnRepo: ITransactionRepository,
   ) {}
+
+  private mapStatementFields(s: ExtractedStatement) {
+    return {
+      is_paid: false,
+      total_debt_ars: s.total_debt_ars,
+      minimum_payment: s.minimum_payment,
+      previous_balance: s.previous_balance,
+      credit_limit: s.credit_limit,
+      tna: s.tna,
+      tea: s.tea,
+      cftea_con_iva: s.cftea_con_iva,
+      cftna_con_iva: s.cftna_con_iva,
+      tna_anunciada: s.tna_anunciada,
+      tea_anunciada: s.tea_anunciada,
+      tem_anunciada: s.tem_anunciada,
+      cftea_con_iva_anunciada: s.cftea_con_iva_anunciada,
+      cftna_con_iva_anunciada: s.cftna_con_iva_anunciada,
+      close_date: s.close_date,
+      due_date: s.due_date,
+      next_close_date: s.next_close_date,
+      next_due_date: s.next_due_date,
+      period_from: s.period_from,
+      period_to: s.period_to,
+    }
+  }
 
   async uploadStatement(
     userId: string,
@@ -55,26 +80,7 @@ export class StatementService {
         try {
           await this.stmtRepo.update(existingStatement.id, {
             version: existingStatement.version + 1,
-            is_paid: false,
-            total_debt_ars: extractedStatement.total_debt_ars,
-            minimum_payment: extractedStatement.minimum_payment,
-            previous_balance: extractedStatement.previous_balance,
-            credit_limit: extractedStatement.credit_limit,
-            tna: extractedStatement.tna,
-            tea: extractedStatement.tea,
-            cftea_con_iva: extractedStatement.cftea_con_iva,
-            cftna_con_iva: extractedStatement.cftna_con_iva,
-            tna_anunciada: extractedStatement.tna_anunciada,
-            tea_anunciada: extractedStatement.tea_anunciada,
-            tem_anunciada: extractedStatement.tem_anunciada,
-            cftea_con_iva_anunciada: extractedStatement.cftea_con_iva_anunciada,
-            cftna_con_iva_anunciada: extractedStatement.cftna_con_iva_anunciada,
-            close_date: extractedStatement.close_date,
-            due_date: extractedStatement.due_date,
-            next_close_date: extractedStatement.next_close_date,
-            next_due_date: extractedStatement.next_due_date,
-            period_from: extractedStatement.period_from,
-            period_to: extractedStatement.period_to,
+            ...this.mapStatementFields(extractedStatement),
           })
         } catch (e) {
           console.error('Failed to update statement:', e)
@@ -89,26 +95,7 @@ export class StatementService {
             user_id: userId,
             period: extractedStatement.period,
             version: 1,
-            is_paid: false,
-            total_debt_ars: extractedStatement.total_debt_ars,
-            minimum_payment: extractedStatement.minimum_payment,
-            previous_balance: extractedStatement.previous_balance,
-            credit_limit: extractedStatement.credit_limit,
-            tna: extractedStatement.tna,
-            tea: extractedStatement.tea,
-            cftea_con_iva: extractedStatement.cftea_con_iva,
-            cftna_con_iva: extractedStatement.cftna_con_iva,
-            tna_anunciada: extractedStatement.tna_anunciada,
-            tea_anunciada: extractedStatement.tea_anunciada,
-            tem_anunciada: extractedStatement.tem_anunciada,
-            cftea_con_iva_anunciada: extractedStatement.cftea_con_iva_anunciada,
-            cftna_con_iva_anunciada: extractedStatement.cftna_con_iva_anunciada,
-            close_date: extractedStatement.close_date,
-            due_date: extractedStatement.due_date,
-            next_close_date: extractedStatement.next_close_date,
-            next_due_date: extractedStatement.next_due_date,
-            period_from: extractedStatement.period_from,
-            period_to: extractedStatement.period_to,
+            ...this.mapStatementFields(extractedStatement),
           })
         } catch (e) {
           const err = e as { code?: string }
